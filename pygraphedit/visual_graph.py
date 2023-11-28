@@ -9,8 +9,7 @@ class VisualGraph:
         self.graph = graph
         self.bounds = bounds
         self.coordinates = {
-            node: np.array([random.randint(0, bounds[0]-1),
-                            random.randint(0, bounds[1]-1)])
+            node: (random.randint(0, bounds[0]-1), random.randint(0, bounds[1]-1))
             for node in graph.nodes
         }
         self.selected_node = None
