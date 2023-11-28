@@ -53,8 +53,6 @@ def edit(graph: nx.Graph):
     # creating canvas
     canvas = Canvas(width=800, height=500)
 
-    canvas.auto_refresh = False
-
     dragged_object = None
     is_drag = False
 
