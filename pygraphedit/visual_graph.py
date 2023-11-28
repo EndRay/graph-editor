@@ -3,6 +3,8 @@ import random
 import networkx as nx
 import numpy as np
 
+from pygraphedit.subscribe import subscribable
+
 
 class VisualGraph:
     def __init__(self, graph: nx.Graph, bounds: (int, int)):
@@ -14,17 +16,21 @@ class VisualGraph:
         }
         self.selected_node = None
 
+    @subscribable
     def add_node(self, node, pos: (int, int)):
         self.graph.add_node(node)
         self.coordinates[node] = pos
 
+    @subscribable
     def add_edge(self, node1, node2):
         self.graph.add_edge(node1, node2)
 
+    @subscribable
     def remove_node(self, node):
         self.graph.remove_node(node)
         del self.coordinates[node]
 
+    @subscribable
     def remove_edge(self, node1, node2):
         self.graph.remove_edge(node1, node2)
 
