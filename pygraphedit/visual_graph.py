@@ -29,7 +29,7 @@ class VisualGraph:
     def remove_edge(self, node1, node2):
         self.graph.remove_edge(node1, node2)
 
-    def move_vertex(self, node, pos: (int, int)):
+    def move_node(self, node, pos: (int, int)):
         if node not in self.graph.nodes:
             raise ValueError("Node not in graph")
         self.coordinates[node] = pos
