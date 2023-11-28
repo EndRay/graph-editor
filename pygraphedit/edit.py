@@ -83,6 +83,7 @@ def edit(graph: nx.Graph):
                     visual_graph.selected_node = None
             else:
                 visual_graph.add_node(mex(visual_graph.graph.nodes), pos)
+                visual_graph.selected_node = None
 
         draw_graph(canvas, visual_graph)
 
