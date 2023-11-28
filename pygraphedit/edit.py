@@ -109,7 +109,7 @@ def edit(graph: nx.Graph):
             draw_graph(canvas, visual_graph)
 
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(handle_mousedown)
-    Event(source=canvas, watched_events=['mousemove']).on_dom_event(handle_mousemove)
+    Event(source=canvas, watched_events=['mousemove'], wait=1000//60).on_dom_event(handle_mousemove)
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(handle_mouseup)
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(handle_doubleclick)
 
