@@ -1,3 +1,6 @@
+from pygraphedit.debug import debug_text
+
+
 class Subscribable:
     def __init__(self):
         self.subscribers = []
@@ -10,7 +13,7 @@ class Subscribable:
 
     def notify(self, *args, **kwargs):
         for subscriber in self.subscribers:
-            subscriber(*args, **kwargs)
+            subscriber(*args[1:], **kwargs)
 
 
 def subscribable(func):

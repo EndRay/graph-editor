@@ -8,6 +8,7 @@ from ipycanvas import Canvas, hold_canvas
 from ipyevents import Event
 from pygraphedit.graph_physics import GraphPhysics
 from pygraphedit.visual_graph import VisualGraph
+from pygraphedit.debug import debug_text
 
 NODE_CLICK_RADIUS = 15
 
@@ -27,7 +28,7 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
 
     def draw_vertex(pos, colorcode="black"):
         canvas.fill_style = colorcode
-        canvas.fill_circle(pos[0], pos[1], 5)
+        canvas.fill_circle(pos[0], pos[1], 10)
 
     def draw_edge(pos1, pos2, colorcode="black"):
         canvas.stroke_style = colorcode
@@ -45,13 +46,10 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
                 draw_vertex(pos)
 
 
+
 def edit(graph: nx.Graph):
     visual_graph = VisualGraph(graph, (800, 500))
 
-    debug_text = widgets.Textarea(
-        value='',
-        placeholder='Debug',
-    )
 
     # creating canvas
     canvas = Canvas(width=800, height=500)
@@ -114,7 +112,7 @@ def edit(graph: nx.Graph):
           #  draw_graph(canvas, visual_graph)
 
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(handle_mousedown)
-    Event(source=canvas, watched_events=['mousemove'], wait=1000//60).on_dom_event(handle_mousemove)
+    Event(source=canvas, watched_events=['mousemove'], wait=1000//10).on_dom_event(handle_mousemove)
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(handle_mouseup)
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(handle_doubleclick)
 
