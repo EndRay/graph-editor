@@ -1,7 +1,7 @@
 import ipywidgets as widgets
 import networkx as nx
 from IPython.display import display
-from ipycanvas import Canvas
+from ipycanvas import Canvas, hold_canvas
 from ipyevents import Event
 
 from pygraphedit.visual_graph import VisualGraph
@@ -29,14 +29,15 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
         canvas.line_width = 2
         canvas.stroke_line(*pos1, *pos2)
 
-    clear_canvas()
-    for node1, node2 in visual_graph.graph.edges:
-        draw_edge(visual_graph.coordinates[node1], visual_graph.coordinates[node2])
-    for node, pos in visual_graph.coordinates.items():
-        if node == visual_graph.selected_node:
-            draw_vertex(pos, "red")
-        else:
-            draw_vertex(pos)
+    with hold_canvas():
+        clear_canvas()
+        for node1, node2 in visual_graph.graph.edges:
+            draw_edge(visual_graph.coordinates[node1], visual_graph.coordinates[node2])
+        for node, pos in visual_graph.coordinates.items():
+            if node == visual_graph.selected_node:
+                draw_vertex(pos, "red")
+            else:
+                draw_vertex(pos)
 
 
 def edit(graph: nx.Graph):
