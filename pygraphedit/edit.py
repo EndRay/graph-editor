@@ -1,9 +1,12 @@
+import threading
+import time
+
 import ipywidgets as widgets
 import networkx as nx
 from IPython.display import display
 from ipycanvas import Canvas, hold_canvas
 from ipyevents import Event
-
+from pygraphedit.graph_physics import GraphPhysics
 from pygraphedit.visual_graph import VisualGraph
 
 NODE_CLICK_RADIUS = 15
@@ -68,7 +71,7 @@ def edit(graph: nx.Graph):
             is_drag = True
             pos = (event['relativeX'], event['relativeY'])
             visual_graph.move_node(dragged_object, pos)
-            draw_graph(canvas, visual_graph)
+           # draw_graph(canvas, visual_graph)
 
     def handle_mouseup(event):
         nonlocal dragged_object, is_drag
@@ -97,7 +100,9 @@ def edit(graph: nx.Graph):
             visual_graph.add_node(mex(visual_graph.graph.nodes), pos)
             visual_graph.selected_node = None
 
-        draw_graph(canvas, visual_graph)
+        #draw_graph(canvas, visual_graph)
+
+
 
     def handle_doubleclick(event):
         pos = (event['relativeX'], event['relativeY'])
@@ -106,14 +111,14 @@ def edit(graph: nx.Graph):
         if dist < NODE_CLICK_RADIUS:
             visual_graph.remove_node(clicked_node)
             visual_graph.selected_node = None
-            draw_graph(canvas, visual_graph)
+          #  draw_graph(canvas, visual_graph)
 
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(handle_mousedown)
     Event(source=canvas, watched_events=['mousemove'], wait=1000//60).on_dom_event(handle_mousemove)
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(handle_mouseup)
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(handle_doubleclick)
 
-    draw_graph(canvas, visual_graph)
+   # draw_graph(canvas, visual_graph)
 
     # main widget view
     main_box = widgets.HBox(
@@ -121,3 +126,14 @@ def edit(graph: nx.Graph):
     )
     # Display the widgets
     display(main_box)
+
+    graph_physics = GraphPhysics(visual_graph)
+
+    def main_loop(visual_graph):
+        debug_text.value += "ok\n"
+        while True:
+            graph_physics.update_physics(1/60)
+            draw_graph(canvas, visual_graph)
+            time.sleep(1/60)
+    thread = threading.Thread(target=main_loop, args=(visual_graph,))
+    thread.start()
