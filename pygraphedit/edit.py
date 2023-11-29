@@ -9,10 +9,12 @@ from ipycanvas import Canvas, hold_canvas
 from ipyevents import Event
 from pygraphedit.graph_physics import GraphPhysics
 from pygraphedit.visual_graph import VisualGraph
-from pygraphedit.debug import debug_text
 from functools import partial
 
 NODE_CLICK_RADIUS = 25
+
+NODE_RADIUS = 10
+DRAGGED_NODE_RADIUS = 11
 
 
 def mex(arr):
@@ -28,9 +30,9 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
         canvas.stroke_style = "black"
         canvas.stroke_rect(0, 0, 800, 500)
 
-    def draw_vertex(pos, colorcode="black"):
+    def draw_vertex(pos, size=10, colorcode="black"):
         canvas.fill_style = colorcode
-        canvas.fill_circle(pos[0], pos[1], 10)
+        canvas.fill_circle(pos[0], pos[1], size)
 
     def draw_edge(pos1, pos2, colorcode="black"):
         canvas.stroke_style = colorcode
@@ -42,10 +44,9 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
         for node1, node2 in visual_graph.graph.edges:
             draw_edge(visual_graph.coordinates[node1], visual_graph.coordinates[node2])
         for node, pos in visual_graph.coordinates.items():
-            if node == visual_graph.selected_node:
-                draw_vertex(pos, "red")
-            else:
-                draw_vertex(pos)
+            draw_vertex(pos,
+                        size=(DRAGGED_NODE_RADIUS if node == visual_graph.dragged_node else NODE_RADIUS),
+                        colorcode=("red" if node == visual_graph.selected_node else "black"))
 
 
 def edit(graph: nx.Graph):
@@ -63,13 +64,12 @@ def edit(graph: nx.Graph):
     with labels_info_scrollable:
         display(labels_info)
 
-    def add_label(b, labels_info: widgets.VBox, visual_graph: VisualGraph, label_name: widgets.Textarea):
+    def add_label(labels_info: widgets.VBox, visual_graph: VisualGraph, label_name: widgets.Textarea):
         new_label_name = str(label_name.value)
         if new_label_name in visual_graph.graph.nodes[visual_graph.selected_node].keys():
             return
         else:
             visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = None
-        debug_text.value += str(visual_graph.graph.nodes[visual_graph.selected_node].keys()) + '\n'
         label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='125px', height='50px'))
         label_label = ipywidgets.Label(value=str(label_name.value), layout=widgets.Layout(width='125px', height='50px'), justify_content='center')
         new_label = ipywidgets.HBox([label_label, label_value])
@@ -83,21 +83,20 @@ def edit(graph: nx.Graph):
 
     on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph, label_name=label_name_text_box)
     add_new_label_button.on_click(on_click)
-    dragged_object = None
     is_drag = False
 
     def handle_mousedown(event):
-        nonlocal dragged_object
         clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
         if dist < NODE_CLICK_RADIUS:
-            dragged_object = clicked_node
+            # dragged_object = clicked_node
+            visual_graph.drag_start(clicked_node)
 
     def handle_mousemove(event):
-        nonlocal dragged_object, is_drag
-        if dragged_object is not None:
+        nonlocal is_drag
+        if visual_graph.dragged_node is not None:
             is_drag = True
             pos = (event['relativeX'], event['relativeY'])
-            visual_graph.move_node(dragged_object, pos)
+            visual_graph.move_node(visual_graph.dragged_node, pos)
 
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
         if visual_graph.selected_node is not None:
@@ -119,8 +118,8 @@ def edit(graph: nx.Graph):
             labels_info.children = (ipywidgets.Label(value=f"Click on node to update labels", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
 
     def handle_mouseup(event):
-        nonlocal dragged_object, is_drag
-        dragged_object = None
+        nonlocal is_drag
+        visual_graph.drag_end()
         if is_drag:
             is_drag = False
             return
@@ -173,7 +172,6 @@ def edit(graph: nx.Graph):
     graph_physics = GraphPhysics(visual_graph)
 
     def main_loop(visual_graph):
-        debug_text.value += "ok\n"
         while True:
             graph_physics.update_physics(1 / 60)
             draw_graph(canvas, visual_graph)

@@ -15,6 +15,7 @@ class VisualGraph:
             for node in graph.nodes
         }
         self.selected_node = None
+        self.dragged_node = None
 
     @subscribable
     def add_node(self, node, pos: (int, int)):
@@ -39,6 +40,14 @@ class VisualGraph:
         if node not in self.graph.nodes:
             raise ValueError("Node not in graph")
         self.coordinates[node] = pos
+
+    @subscribable
+    def drag_start(self, node):
+        self.dragged_node = node
+
+    @subscribable
+    def drag_end(self):
+        self.dragged_node = None
 
     def get_closest_node(self, pos: (int, int)) -> (any, float):
         closest_node = None

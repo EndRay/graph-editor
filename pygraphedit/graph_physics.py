@@ -3,6 +3,9 @@ import pymunk
 from pygraphedit.debug import debug_text
 from pygraphedit.visual_graph import VisualGraph
 
+VERTEX_BODY_MASS = 1
+VERTEX_BODY_MOMENT = 1
+
 def create_border(space, bounds: (int, int)):
     width, height = bounds
     # Create the ground (static) segment
@@ -44,8 +47,21 @@ class GraphPhysics:
         visual_graph.remove_edge.subscribable.subscribe(self.remove_edge)
         visual_graph.move_node.subscribable.subscribe(self.move_node)
 
+        visual_graph.drag_start.subscribable.subscribe(self.drag_start)
+        visual_graph.drag_end.subscribable.subscribe(self.drag_end)
+
+    def drag_start(self, node):
+        self.vertices_body[node].body_type = pymunk.Body.STATIC
+
+    def drag_end(self):
+        node = self.visual_graph.dragged_node
+        if node is not None:
+            self.vertices_body[node].body_type = pymunk.Body.DYNAMIC
+            self.vertices_body[node].mass = VERTEX_BODY_MASS
+            self.vertices_body[node].moment = VERTEX_BODY_MOMENT
+
     def add_vert(self, node, pos: (int, int)):
-        body = pymunk.Body(1, 1)
+        body = pymunk.Body(VERTEX_BODY_MASS, VERTEX_BODY_MOMENT)
         body.position = pos
         shape = pymunk.Circle(body, radius=10)  # Adjust the radius as needed
         shape.elasticity = 1.0  # Elasticity of collisions
