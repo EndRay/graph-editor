@@ -3,11 +3,32 @@ import pymunk
 from pygraphedit.debug import debug_text
 from pygraphedit.visual_graph import VisualGraph
 
+def create_border(space, width, height):
+    # Create the ground (static) segment
+    ground = pymunk.Segment(space.static_body, (0, 0), (width, 0), 5)
+    ground.friction = 1.0
+    space.add(ground)
+
+    # Create the ceiling (static) segment
+    ceiling = pymunk.Segment(space.static_body, (0, height), (width, height), 5)
+    ceiling.friction = 1.0
+    space.add(ceiling)
+
+    # Create the left (static) segment
+    left_wall = pymunk.Segment(space.static_body, (0, 0), (0, height), 5)
+    left_wall.friction = 1.0
+    space.add(left_wall)
+
+    # Create the right (static) segment
+    right_wall = pymunk.Segment(space.static_body, (width, 0), (width, height), 5)
+    right_wall.friction = 1.0
+    space.add(right_wall)
 
 class GraphPhysics:
     def __init__(self, visual_graph: VisualGraph):
         self.visual_graph = visual_graph
         self.space = pymunk.Space()
+        create_border(self.space, 800, 500)
         self.space.gravity = (0, 0)
         self.verticesBody = {}
         self.edgeBody = {}
