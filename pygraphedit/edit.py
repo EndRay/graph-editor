@@ -98,11 +98,10 @@ def edit(graph: nx.Graph):
             is_drag = True
             pos = (event['relativeX'], event['relativeY'])
             visual_graph.move_node(dragged_object, pos)
-        # draw_graph(canvas, visual_graph)
 
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
         if visual_graph.selected_node is not None:
-            labels_info.children = (ipywidgets.Label(value=f"Node with id {str(visual_graph.selected_node)}", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
+            labels_info.children = (ipywidgets.Label(value=f"Node {repr(visual_graph.selected_node)}", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
             for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
                 label_value = ipywidgets.Textarea(value=str(visual_graph.graph.nodes[visual_graph.selected_node][i]),
                                                   layout=widgets.Layout(width='125px', height='50px'))
@@ -143,18 +142,13 @@ def edit(graph: nx.Graph):
                     visual_graph.remove_edge(visual_graph.selected_node, node)
                 else:
                     visual_graph.add_edge(visual_graph.selected_node, node)
-                # visual_graph.selected_node = None
-                # update_labels(labels_info, visual_graph)
         else:
             if visual_graph.selected_node is None:
                 new_node = mex(visual_graph.graph.nodes)
                 visual_graph.add_node(new_node, pos)
-                visual_graph.selected_node = new_node
-                update_labels(labels_info, visual_graph)
             else:
                 visual_graph.selected_node = None
                 update_labels(labels_info, visual_graph)
-        # draw_graph(canvas, visual_graph)
 
     def handle_doubleclick(event):
         pos = (event['relativeX'], event['relativeY'])
@@ -162,23 +156,16 @@ def edit(graph: nx.Graph):
         if dist < NODE_CLICK_RADIUS:
             visual_graph.remove_node(clicked_node)
             visual_graph.selected_node = None
-        #  draw_graph(canvas, visual_graph)
 
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(handle_mousedown)
     Event(source=canvas, watched_events=['mousemove'], wait=1000 // 10).on_dom_event(handle_mousemove)
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(handle_mouseup)
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(handle_doubleclick)
 
-    # draw_graph(canvas, visual_graph)
-
     # main widget view
     main_box = widgets.HBox(
         [labels_info_scrollable, canvas]
     )
-
-    #main_box = widgets.HBox(
-    #    [widgets.VBox([debug_text, labels_info]), canvas]
-    #)
 
     # Display the widgets
     display(main_box)
