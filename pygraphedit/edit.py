@@ -168,6 +168,8 @@ def edit(graph: nx.Graph):
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(perform_in_future(handle_mouseup))
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(perform_in_future(handle_doubleclick))
 
+    debug_text = widgets.Textarea()
+
     # main widget view
     main_box = widgets.HBox(
         [labels_info_scrollable, canvas]
@@ -179,14 +181,18 @@ def edit(graph: nx.Graph):
     graph_physics = GraphPhysics(visual_graph)
 
     def main_loop(visual_graph):
-        while True:
-            graph_physics.update_physics(1 / 60)
-            visual_graph.normalize_positions()
-            draw_graph(canvas, visual_graph)
-            time.sleep(1 / 60)
-            for (action, args, kwargs) in actions_to_perform:
-                action(*args, **kwargs)
-            actions_to_perform.clear()
+        try:
+            while True:
+                graph_physics.update_physics(1 / 60)
+                graph_physics.normalize_positions()
+                draw_graph(canvas, visual_graph)
+                time.sleep(1 / 60)
+                for (action, args, kwargs) in actions_to_perform:
+                    action(*args, **kwargs)
+                actions_to_perform.clear()
+        except Exception as e:
+            debug_text.value = repr(e)
+
 
     thread = threading.Thread(target=main_loop, args=(visual_graph,))
     thread.start()
