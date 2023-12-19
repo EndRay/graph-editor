@@ -85,6 +85,13 @@ def edit(graph: nx.Graph):
     add_new_label_button.on_click(on_click)
     is_drag = False
 
+    actions_to_perform = []
+
+    def perform_in_future(action):
+        def event_consumer(*args, **kwargs):
+            actions_to_perform.append((action, args, kwargs))
+        return event_consumer
+
     def handle_mousedown(event):
         clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
         if dist < NODE_CLICK_RADIUS:
@@ -156,10 +163,10 @@ def edit(graph: nx.Graph):
             visual_graph.remove_node(clicked_node)
             visual_graph.selected_node = None
 
-    Event(source=canvas, watched_events=['mousedown']).on_dom_event(handle_mousedown)
-    Event(source=canvas, watched_events=['mousemove'], wait=1000 // 10).on_dom_event(handle_mousemove)
-    Event(source=canvas, watched_events=['mouseup']).on_dom_event(handle_mouseup)
-    Event(source=canvas, watched_events=['dblclick']).on_dom_event(handle_doubleclick)
+    Event(source=canvas, watched_events=['mousedown']).on_dom_event(perform_in_future(handle_mousedown))
+    Event(source=canvas, watched_events=['mousemove'], wait=1000 // 60).on_dom_event(perform_in_future(handle_mousemove))
+    Event(source=canvas, watched_events=['mouseup']).on_dom_event(perform_in_future(handle_mouseup))
+    Event(source=canvas, watched_events=['dblclick']).on_dom_event(perform_in_future(handle_doubleclick))
 
     # main widget view
     main_box = widgets.HBox(
@@ -176,6 +183,9 @@ def edit(graph: nx.Graph):
             graph_physics.update_physics(1 / 60)
             draw_graph(canvas, visual_graph)
             time.sleep(1 / 60)
+            for (action, args, kwargs) in actions_to_perform:
+                action(*args, **kwargs)
+            actions_to_perform.clear()
 
     thread = threading.Thread(target=main_loop, args=(visual_graph,))
     thread.start()
