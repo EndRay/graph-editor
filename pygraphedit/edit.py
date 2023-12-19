@@ -133,19 +133,21 @@ def edit(graph: nx.Graph):
     prop_button.on_click(partial(click_prop))
 
     def click_verts_select(button_widget):
-        nonlocal vertex_select
+        nonlocal vertex_select, visual_graph
         vertex_select = not vertex_select
         if vertex_select:
             button_widget.style.button_color="LimeGreen"
         else:
+            visual_graph.selected_node = None
             button_widget.style.button_color="Red"
     
     def click_edge_select(button_widget):
-        nonlocal edge_select
+        nonlocal edge_select, visual_graph
         edge_select = not edge_select
         if edge_select:
             button_widget.style.button_color="LimeGreen"
         else:
+            visual_graph.selected_edge=None
             button_widget.style.button_color="Red"
 
     edge_button.on_click(partial(click_edge_select))
