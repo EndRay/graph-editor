@@ -61,12 +61,16 @@ def edit(graph: nx.Graph):
     canvas = Canvas(width=800, height=500)
 
     struct_button = ipywidgets.Button(description="Structure mode", layout=widgets.Layout(width='125px', height='50px'))
+    struct_button.style.button_color="LightBlue"
     prop_button = ipywidgets.Button(description="Properties mode", layout=widgets.Layout(width='125px', height='50px'))
+    prop_button.style.button_color=None
     mode_box = widgets.HBox([struct_button, prop_button])
     display(mode_box)
 
     edge_button = ipywidgets.Button(description="Edge select", layout=widgets.Layout(width='125px', height='50px'))
+    edge_button.style.button_color="LimeGreen"
     vert_button = ipywidgets.Button(description="Node select", layout=widgets.Layout(width='125px', height='50px'))
+    vert_button.style.button_color="LimeGreen"
     select_box = widgets.HBox([vert_button, edge_button])
     display(select_box)
 
@@ -114,12 +118,16 @@ def edit(graph: nx.Graph):
     
 
     def click_struct(button_widget):
-        nonlocal mode
+        nonlocal mode, prop_button
         mode=Mode.STRUCTURE
+        button_widget.style.button_color='LightBlue'
+        prop_button.style.button_color=None
 
     def click_prop(button_widget):
-        nonlocal mode
+        nonlocal mode, struct_button
         mode=Mode.PROPERTIES
+        button_widget.style.button_color='LightBlue'
+        struct_button.style.button_color=None
 
     struct_button.on_click(partial(click_struct))
     prop_button.on_click(partial(click_prop))
@@ -127,10 +135,19 @@ def edit(graph: nx.Graph):
     def click_verts_select(button_widget):
         nonlocal vertex_select
         vertex_select = not vertex_select
+        if vertex_select:
+            button_widget.style.button_color="LimeGreen"
+        else:
+            button_widget.style.button_color="Red"
     
     def click_edge_select(button_widget):
         nonlocal edge_select
         edge_select = not edge_select
+        if edge_select:
+            button_widget.style.button_color="LimeGreen"
+        else:
+            button_widget.style.button_color="Red"
+
     edge_button.on_click(partial(click_edge_select))
     vert_button.on_click(partial(click_verts_select))
 
