@@ -3,6 +3,7 @@ import random
 import networkx as nx
 import numpy as np
 
+from pygraphedit.settings import NODE_RADIUS
 from pygraphedit.subscribe import subscribable
 
 
@@ -11,7 +12,7 @@ class VisualGraph:
         self.graph = graph
         self.bounds = bounds
         self.coordinates = {
-            node: (random.randint(0, bounds[0]-1), random.randint(0, bounds[1]-1))
+            node: [random.randint(0, bounds[0]-1), random.randint(0, bounds[1]-1)]
             for node in graph.nodes
         }
         self.selected_node = None
@@ -58,3 +59,14 @@ class VisualGraph:
                 closest_dist = dist
                 closest_node = node
         return closest_node, closest_dist
+
+    def normalize_positions(self):
+        for node, node_pos in self.coordinates.items():
+            if node_pos[0] < 0:
+                node_pos[0] = NODE_RADIUS
+            if node_pos[1] < 0:
+                node_pos[1] = NODE_RADIUS
+            if node_pos[0] > self.bounds[0]:
+                node_pos[0] = self.bounds[0] - NODE_RADIUS
+            if node_pos[1] > self.bounds[1]:
+                node_pos[1] = self.bounds[1 ] - NODE_RADIUS

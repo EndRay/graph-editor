@@ -8,13 +8,9 @@ from IPython.display import display
 from ipycanvas import Canvas, hold_canvas
 from ipyevents import Event
 from pygraphedit.graph_physics import GraphPhysics
+from pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_CLICK_RADIUS, NODE_RADIUS
 from pygraphedit.visual_graph import VisualGraph
 from functools import partial
-
-NODE_CLICK_RADIUS = 25
-
-NODE_RADIUS = 10
-DRAGGED_NODE_RADIUS = 11
 
 
 def mex(arr):
@@ -181,6 +177,7 @@ def edit(graph: nx.Graph):
     def main_loop(visual_graph):
         while True:
             graph_physics.update_physics(1 / 60)
+            visual_graph.normalize_positions()
             draw_graph(canvas, visual_graph)
             time.sleep(1 / 60)
             for (action, args, kwargs) in actions_to_perform:
