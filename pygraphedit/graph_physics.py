@@ -9,22 +9,22 @@ VERTEX_BODY_MOMENT = 1
 def create_border(space, bounds: (int, int)):
     width, height = bounds
     # Create the ground (static) segment
-    ground = pymunk.Segment(space.static_body, (0, 0), (width, 0), 5)
+    ground = pymunk.Segment(space.static_body, (0, -20), (width, -20), 20)
     ground.friction = 1.0
     space.add(ground)
 
     # Create the ceiling (static) segment
-    ceiling = pymunk.Segment(space.static_body, (0, height), (width, height), 5)
+    ceiling = pymunk.Segment(space.static_body, (0, height + 20), (width, height + 20), 20)
     ceiling.friction = 1.0
     space.add(ceiling)
 
     # Create the left (static) segment
-    left_wall = pymunk.Segment(space.static_body, (0, 0), (0, height), 5)
+    left_wall = pymunk.Segment(space.static_body, (0, -20), (-20, height), 20)
     left_wall.friction = 1.0
     space.add(left_wall)
 
     # Create the right (static) segment
-    right_wall = pymunk.Segment(space.static_body, (width, 0), (width, height), 5)
+    right_wall = pymunk.Segment(space.static_body, (width + 20, 0), (width + 20, height), 20)
     right_wall.friction = 1.0
     space.add(right_wall)
 
