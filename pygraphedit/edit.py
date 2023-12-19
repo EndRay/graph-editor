@@ -84,8 +84,9 @@ def edit(graph: nx.Graph):
     on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph, label_name=label_name_text_box)
     add_new_label_button.on_click(on_click)
     is_drag = False
-
+    start_mouse_position = (0, 0)
     actions_to_perform = []
+    EPS = 10
 
     def perform_in_future(action):
         def event_consumer(*args, **kwargs):
@@ -93,14 +94,17 @@ def edit(graph: nx.Graph):
         return event_consumer
 
     def handle_mousedown(event):
+        nonlocal start_mouse_position
+        start_mouse_position = (event['relativeX'], event['relativeY'])
         clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
         if dist < NODE_CLICK_RADIUS:
             # dragged_object = clicked_node
             visual_graph.drag_start(clicked_node)
 
     def handle_mousemove(event):
-        nonlocal is_drag
-        if visual_graph.dragged_node is not None:
+        nonlocal is_drag, EPS
+        distance =  abs(start_mouse_position[0] - event['relativeX']) + abs(start_mouse_position[1] - event['relativeY'])
+        if visual_graph.dragged_node is not None and distance > EPS:
             is_drag = True
             pos = (event['relativeX'], event['relativeY'])
             visual_graph.move_node(visual_graph.dragged_node, pos)
