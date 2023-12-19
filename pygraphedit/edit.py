@@ -64,7 +64,7 @@ def edit(graph: nx.Graph):
     with labels_info_scrollable:
         display(labels_info)
 
-    def add_label(labels_info: widgets.VBox, visual_graph: VisualGraph, label_name: widgets.Textarea):
+    def add_label(button_widget, labels_info: widgets.VBox, visual_graph: VisualGraph, label_name: widgets.Textarea):
         new_label_name = str(label_name.value)
         if new_label_name in visual_graph.graph.nodes[visual_graph.selected_node].keys():
             return
