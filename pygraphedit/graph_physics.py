@@ -106,8 +106,9 @@ class GraphPhysics:
     def move_node(self, node, pos: (int, int)):
         self.vertex_body[node].position = pos
 
-    def update_physics(self, dt):
-        self.space.step(dt)
+    def update_physics(self, dt, physics):
+        if physics:
+            self.space.step(dt)
         for node, body in self.vertex_body.items():
             self.visual_graph.move_node(node, [body.position.x, body.position.y])
         self.normalize_positions()

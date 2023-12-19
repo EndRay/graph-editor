@@ -7,6 +7,7 @@ import networkx as nx
 from IPython.display import display
 from ipycanvas import Canvas, hold_canvas
 from ipyevents import Event
+
 from pygraphedit.graph_physics import GraphPhysics
 from pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_CLICK_RADIUS, NODE_RADIUS
 from pygraphedit.visual_graph import VisualGraph
@@ -67,7 +68,8 @@ def edit(graph: nx.Graph):
         else:
             visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = None
         label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='125px', height='50px'))
-        label_label = ipywidgets.Label(value=str(label_name.value), layout=widgets.Layout(width='125px', height='50px'), justify_content='center')
+        label_label = ipywidgets.Label(value=str(label_name.value), layout=widgets.Layout(width='125px', height='50px'),
+                                       justify_content='center')
         new_label = ipywidgets.HBox([label_label, label_value])
 
         def modify_label(change, visual_graph: VisualGraph):
@@ -99,7 +101,7 @@ def edit(graph: nx.Graph):
 
     def handle_mousemove(event):
         nonlocal is_drag, EPS
-        distance =  abs(start_mouse_position[0] - event['relativeX']) + abs(start_mouse_position[1] - event['relativeY'])
+        distance = abs(start_mouse_position[0] - event['relativeX']) + abs(start_mouse_position[1] - event['relativeY'])
         if visual_graph.dragged_node is not None and distance > EPS:
             is_drag = True
             pos = (event['relativeX'], event['relativeY'])
@@ -107,7 +109,9 @@ def edit(graph: nx.Graph):
 
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
         if visual_graph.selected_node is not None:
-            labels_info.children = (ipywidgets.Label(value=f"Node {repr(visual_graph.selected_node)}", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
+            labels_info.children = (ipywidgets.Label(value=f"Node {repr(visual_graph.selected_node)}",
+                                                     layout=widgets.Layout(width='250px', height='50px',
+                                                                           justify_content='center')),)
             for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
                 label_value = ipywidgets.Textarea(value=str(visual_graph.graph.nodes[visual_graph.selected_node][i]),
                                                   layout=widgets.Layout(width='125px', height='50px'))
@@ -122,7 +126,9 @@ def edit(graph: nx.Graph):
                 labels_info.children += (new_label,)
             labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
         else:
-            labels_info.children = (ipywidgets.Label(value=f"Click on node to update labels", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
+            labels_info.children = (ipywidgets.Label(value=f"Click on node to update labels",
+                                                     layout=widgets.Layout(width='250px', height='50px',
+                                                                           justify_content='center')),)
 
     def handle_mouseup(event):
         nonlocal is_drag
@@ -156,6 +162,8 @@ def edit(graph: nx.Graph):
                 visual_graph.selected_node = None
                 update_labels(labels_info, visual_graph)
 
+    CLOSE = False
+
     def handle_doubleclick(event):
         pos = (event['relativeX'], event['relativeY'])
         clicked_node, dist = visual_graph.get_closest_node(pos)
@@ -164,26 +172,38 @@ def edit(graph: nx.Graph):
             visual_graph.selected_node = None
 
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(perform_in_future(handle_mousedown))
-    Event(source=canvas, watched_events=['mousemove'], wait=1000 // 60).on_dom_event(perform_in_future(handle_mousemove))
+    Event(source=canvas, watched_events=['mousemove'], wait=1000 // 60).on_dom_event(
+        perform_in_future(handle_mousemove))
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(perform_in_future(handle_mouseup))
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(perform_in_future(handle_doubleclick))
 
+    close_button = widgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'), icon='window-close')
+    physics_button = widgets.ToggleButton(
+                                value=True,
+                                description='',
+                                disabled=False,
+                                indent=False,
+                                layout=widgets.Layout(width='50px', height='50px'), icon="wrench")
+    main_box = widgets.HBox()
     debug_text = widgets.Textarea()
 
-    # main widget view
-    main_box = widgets.HBox(
-        [labels_info_scrollable, canvas]
-    )
+    def close(button):
+        nonlocal main_box, CLOSE
+        CLOSE = True
+        main_box.children = ()
 
-    # Display the widgets
+    close_button.on_click(close)
+    # main widget view
+    main_box.children = ([widgets.VBox(children=(labels_info_scrollable, widgets.HBox((close_button, physics_button)))), canvas])
     display(main_box)
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
 
-    def main_loop(visual_graph):
+    def main_loop(visual_graph, physics_button):
+        nonlocal CLOSE
         try:
-            while True:
-                graph_physics.update_physics(1 / 60)
+            while not CLOSE:
+                graph_physics.update_physics(1 / 60, physics_button.value)
                 graph_physics.normalize_positions()
                 draw_graph(canvas, visual_graph)
                 time.sleep(1 / 60)
@@ -193,6 +213,5 @@ def edit(graph: nx.Graph):
         except Exception as e:
             debug_text.value = repr(e)
 
-
-    thread = threading.Thread(target=main_loop, args=(visual_graph,))
+    thread = threading.Thread(target=main_loop, args=(visual_graph, physics_button))
     thread.start()
