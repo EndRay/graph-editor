@@ -138,12 +138,14 @@ def edit(graph: nx.Graph):
         mode=Mode.STRUCTURE
         button_widget.style.button_color='LightBlue'
         prop_button.style.button_color=None
+        update_labels(labels_info, visual_graph)
 
     def click_prop(button_widget):
         nonlocal mode, struct_button
         mode=Mode.PROPERTIES
         button_widget.style.button_color='LightBlue'
         struct_button.style.button_color=None
+        update_labels(labels_info, visual_graph)
 
     struct_button.on_click(partial(click_struct))
     prop_button.on_click(partial(click_prop))
@@ -231,38 +233,52 @@ def edit(graph: nx.Graph):
 
 
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
-        if visual_graph.selected_node is not None:
-            labels_info.children = (ipywidgets.Label(value=f"Node {repr(visual_graph.selected_node)}", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
-            for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
-                label_value = ipywidgets.Textarea(value=str(visual_graph.graph.nodes[visual_graph.selected_node][i]),
-                                                  layout=widgets.Layout(width='125px', height='50px'))
-                label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='125px', height='50px'))
-                new_label = ipywidgets.HBox([label_label, label_value])
+        nonlocal mode
+        if mode is Mode.PROPERTIES:
+            if visual_graph.selected_node is not None:
+                labels_info.children = (ipywidgets.Label(value=f"Node {repr(visual_graph.selected_node)}", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
+                for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
+                    label_value = ipywidgets.Textarea(value=str(visual_graph.graph.nodes[visual_graph.selected_node][i]),
+                                                    layout=widgets.Layout(width='125px', height='50px'))
+                    label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='125px', height='50px'))
+                    new_label = ipywidgets.HBox([label_label, label_value])
 
-                def modify_label(change, visual_graph: VisualGraph):
-                    visual_graph.graph.nodes[visual_graph.selected_node][i] = change["new"]
+                    def modify_label(change, visual_graph: VisualGraph):
+                        visual_graph.graph.nodes[visual_graph.selected_node][i] = change["new"]
 
-                on_change = partial(modify_label, visual_graph=visual_graph)
-                label_value.observe(on_change, names="value")
-                labels_info.children += (new_label,)
-            labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
-        elif visual_graph.selected_edge is not None:
-            labels_info.children = (ipywidgets.Label(value=f"Edge {repr(visual_graph.selected_edge)}", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
-            for i in visual_graph.graph.edges[visual_graph.selected_edge].keys():
-                label_value = ipywidgets.Textarea(value=str(visual_graph.graph.edges[visual_graph.selected_edge][i]),
-                                                  layout=widgets.Layout(width='125px', height='50px'))
-                label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='125px', height='50px'))
-                new_label = ipywidgets.HBox([label_label, label_value])
+                    on_change = partial(modify_label, visual_graph=visual_graph)
+                    label_value.observe(on_change, names="value")
+                    labels_info.children += (new_label,)
+                labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
+            elif visual_graph.selected_edge is not None:
+                labels_info.children = (ipywidgets.Label(value=f"Edge {repr(visual_graph.selected_edge)}", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
+                for i in visual_graph.graph.edges[visual_graph.selected_edge].keys():
+                    label_value = ipywidgets.Textarea(value=str(visual_graph.graph.edges[visual_graph.selected_edge][i]),
+                                                    layout=widgets.Layout(width='125px', height='50px'))
+                    label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='125px', height='50px'))
+                    new_label = ipywidgets.HBox([label_label, label_value])
 
-                def modify_label(change, visual_graph: VisualGraph):
-                    visual_graph.graph.edges[visual_graph.selected_edge][i] = change["new"]
+                    def modify_label(change, visual_graph: VisualGraph):
+                        visual_graph.graph.edges[visual_graph.selected_edge][i] = change["new"]
 
-                on_change = partial(modify_label, visual_graph=visual_graph)
-                label_value.observe(on_change, names="value")
-                labels_info.children += (new_label,)
-            labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
+                    on_change = partial(modify_label, visual_graph=visual_graph)
+                    label_value.observe(on_change, names="value")
+                    labels_info.children += (new_label,)
+                labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
+            else:
+                labels_info.children = (ipywidgets.Label(value=f"Node labels: ", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
+                for name in visual_graph.vertex_labels:
+                    label= ipywidgets.Label(value=name, layout=widgets.Layout(width='125px', height='50px'))
+                    labels_info.children+=(label, )
+                labels_info.children += (ipywidgets.Label(value=f"Edge labels: ", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
+                for name in visual_graph.edge_labels:
+                    label= ipywidgets.Label(value=name, layout=widgets.Layout(width='125px', height='50px'))
+                    labels_info.children+=(label, )
         else:
-            labels_info.children = (ipywidgets.Label(value=f"Click on node to update labels", layout=widgets.Layout(width='250px', height='50px', justify_content='center')),)
+            labels_info.children=()
+                
+
+
 
     def handle_mouseup(event):
         nonlocal mode
