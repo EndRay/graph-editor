@@ -49,7 +49,7 @@ class VisualGraph:
             return
         else:
             self.vertex_labels.add(label)
-            nx.set_node_attributes(self.graph, label)
+            nx.set_node_attributes(self.graph, "", label)
 
     @subscribable
     def new_edge_label(self,label):
@@ -57,7 +57,7 @@ class VisualGraph:
             return
         else:
             self.edge_labels.add(label)
-            nx.set_edge_attributes(self.graph, label)
+            nx.set_edge_attributes(self.graph, "", label)
         
     @subscribable
     def label_edge(self, edge, label, value):
