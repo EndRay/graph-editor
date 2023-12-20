@@ -101,8 +101,8 @@ class VisualGraph:
         closest_edge = None
         closest_dist = float("inf")
         for u,v in self.graph.edges:
-            p1=self.coordinates[u]
-            p2=self.coordinates[v]
+            p1=np.array(self.coordinates[u])
+            p2=np.array(self.coordinates[v])
             p3=np.array(pos)
             #TODO: copied from the internet, check for correctness:
             dist = np.linalg.norm(np.cross(p2-p1, p3-p1)/np.linalg.norm(p2-p1))

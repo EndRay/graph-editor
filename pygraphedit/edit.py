@@ -12,7 +12,7 @@ from pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_CLICK_RADIUS, NODE_RA
 from pygraphedit.visual_graph import VisualGraph
 from functools import partial
 from enum import Enum
-
+from pygraphedit.debug import debug_text
 EDGE_CLICK_RADIUS =25
 
 
@@ -41,6 +41,7 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
         canvas.stroke_style = colorcode
         canvas.line_width = 2
         canvas.stroke_line(*pos1, *pos2)
+    debug_text.value="aaaa"
 
     with hold_canvas():
         clear_canvas()
@@ -213,14 +214,6 @@ def edit(graph: nx.Graph):
                     visual_graph.selected_edge = None
                     return
 
-            if edge_select:
-                clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
-                if dist < EDGE_CLICK_RADIUS:
-                    #we will select the edge also when dragging, this behaviour can be changed
-                    #for now the only thing that selecting an edge will do will be showing its properties
-                    edge_click(clicked_edge)
-                    update_labels(labels_info, visual_graph)
-
     def handle_mousemove(event):
         nonlocal mode, is_drag, EPS
         distance = abs(start_mouse_position[0] - event['relativeX']) + abs(start_mouse_position[1] -event['relativeY'])
@@ -290,8 +283,6 @@ def edit(graph: nx.Graph):
                 is_drag = False
                 return
 
-            if visual_graph.selected_edge is not None:
-                return 
 
             #selecting edges is handled with clicking, as we canot drag them
             #perhaps we should add the functionality of dragging edges as well and change that
@@ -315,13 +306,23 @@ def edit(graph: nx.Graph):
                     else:
                         visual_graph.selected_node = node
                         update_labels(labels_info, visual_graph)
+                    return
+
+            if edge_select:
+                clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
+                if dist < EDGE_CLICK_RADIUS:
+                    #we will select the edge also when dragging, this behaviour can be changed
+                    #for now the only thing that selecting an edge will do will be showing its properties
+                    edge_click(clicked_edge)
+                    update_labels(labels_info, visual_graph)
+
+            else:
+                if visual_graph.selected_node is None:
+                    new_node = mex(visual_graph.graph.nodes)
+                    visual_graph.add_node(new_node, pos)
                 else:
-                    if visual_graph.selected_node is None:
-                        new_node = mex(visual_graph.graph.nodes)
-                        visual_graph.add_node(new_node, pos)
-                    else:
-                        visual_graph.selected_node = None
-                        update_labels(labels_info, visual_graph)
+                    visual_graph.selected_node = None
+                    update_labels(labels_info, visual_graph)
 
     def handle_doubleclick(event):
         nonlocal mode
@@ -337,8 +338,10 @@ def edit(graph: nx.Graph):
             if edge_select:
                 clicked_edge, dist = visual_graph.get_closest_edge(pos)
                 if dist < EDGE_CLICK_RADIUS:
-                    visual_graph.remove_edge(clicked_edge)
                     visual_graph.selected_edge = None
+                    visual_graph.remove_edge(clicked_edge[0], clicked_edge[1])
+                    debug_text.value=str(clicked_edge)
+
 
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(perform_in_future(handle_mousedown))
     Event(source=canvas, watched_events=['mousemove'], wait=1000 // 60).on_dom_event(perform_in_future(handle_mousemove))
