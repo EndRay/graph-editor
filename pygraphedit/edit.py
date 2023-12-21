@@ -59,11 +59,28 @@ def edit(graph: nx.Graph):
     # creating canvas
     canvas = Canvas(width=800, height=500)
 
+    close_button = widgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'), icon='window-close')
+    physics_button = widgets.ToggleButton(
+                                value=True,
+                                description='',
+                                disabled=False,
+                                indent=False,
+                                layout=widgets.Layout(width='50px', height='50px'), icon="wrench")
+
+    def close(button):
+        nonlocal main_box, CLOSE
+        CLOSE = True
+        main_box.children = ()
+
+    close_button.on_click(close)
+
+
+
     struct_button = ipywidgets.Button(description="Structure mode", layout=widgets.Layout(width='125px', height='50px'))
     struct_button.style.button_color="LightBlue"
     prop_button = ipywidgets.Button(description="Properties mode", layout=widgets.Layout(width='125px', height='50px'))
     prop_button.style.button_color=None
-    mode_box = widgets.HBox([struct_button, prop_button])
+    mode_box = widgets.HBox([struct_button, prop_button, close_button, physics_button])
     display(mode_box)
 
     edge_button = ipywidgets.Button(description="Edge select", layout=widgets.Layout(width='125px', height='50px'))
@@ -351,24 +368,11 @@ def edit(graph: nx.Graph):
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(perform_in_future(handle_mouseup))
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(perform_in_future(handle_doubleclick))
 
-    close_button = widgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'), icon='window-close')
-    physics_button = widgets.ToggleButton(
-                                value=True,
-                                description='',
-                                disabled=False,
-                                indent=False,
-                                layout=widgets.Layout(width='50px', height='50px'), icon="wrench")
     main_box = widgets.HBox()
     debug_text = widgets.Textarea()
 
-    def close(button):
-        nonlocal main_box, CLOSE
-        CLOSE = True
-        main_box.children = ()
-
-    close_button.on_click(close)
     # main widget view
-    main_box.children = ([widgets.VBox(children=(labels_info_scrollable, widgets.HBox((close_button, physics_button)))), canvas])
+    main_box.children = ([labels_info_scrollable, canvas])
     display(main_box)
 
     output = ipywidgets.Output()
