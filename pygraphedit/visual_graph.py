@@ -105,7 +105,10 @@ class VisualGraph:
             p2=np.array(self.coordinates[v])
             p3=np.array(pos)
             #TODO: copied from the internet, check for correctness:
-            dist = np.linalg.norm(np.cross(p2-p1, p3-p1)/np.linalg.norm(p2-p1))
+            if np.dot(p3 - p1, p2 - p1) > 0 and np.dot(p3 - p2, p1 - p2) > 0:
+                dist = np.linalg.norm(np.cross(p2-p1, p3-p1)/np.linalg.norm(p2-p1))
+            else:
+                dist = min(np.hypot(*(p3 - p1)), np.hypot(*(p3 - p2)))
             if dist < closest_dist:
                 closest_dist = dist
                 closest_edge = (u, v)
