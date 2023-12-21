@@ -7,6 +7,7 @@ import networkx as nx
 from IPython.display import display
 from ipycanvas import Canvas, hold_canvas
 from ipyevents import Event
+
 from pygraphedit.graph_physics import GraphPhysics
 from pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_CLICK_RADIUS, NODE_RADIUS
 from pygraphedit.visual_graph import VisualGraph
@@ -41,7 +42,6 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
         canvas.stroke_style = colorcode
         canvas.line_width = 2
         canvas.stroke_line(*pos1, *pos2)
-    debug_text.value="aaaa"
 
     with hold_canvas():
         clear_canvas()
@@ -132,7 +132,7 @@ def edit(graph: nx.Graph):
         def event_consumer(*args, **kwargs):
             actions_to_perform.append((action, args, kwargs))
         return event_consumer
-    
+
 
     def click_struct(button_widget):
         nonlocal mode, prop_button
@@ -159,7 +159,7 @@ def edit(graph: nx.Graph):
         else:
             visual_graph.selected_node = None
             button_widget.style.button_color="Red"
-    
+
     def click_edge_select(button_widget):
         nonlocal edge_select, visual_graph
         edge_select = not edge_select
@@ -178,7 +178,7 @@ def edit(graph: nx.Graph):
             visual_graph.selected_node = node
         else:
             visual_graph.selected_node = None
-    
+
     def edge_click(edge):
         visual_graph.selected_node=None
         if visual_graph.selected_edge is None or visual_graph.selected_edge!=edge:
@@ -194,7 +194,7 @@ def edit(graph: nx.Graph):
             if vertex_select:
                 clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
                 if dist < NODE_CLICK_RADIUS:
-                    node_click(clicked_node) 
+                    node_click(clicked_node)
                     update_labels(labels_info, visual_graph)
                     return
 
@@ -203,7 +203,7 @@ def edit(graph: nx.Graph):
                 if dist < EDGE_CLICK_RADIUS:
                     visual_graph.selected_node = None
                     #we will select the edge also when dragging, this behaviour can be changed
-                    edge_click(clicked_edge)    
+                    edge_click(clicked_edge)
                     update_labels(labels_info, visual_graph)
 
         else:
@@ -268,10 +268,9 @@ def edit(graph: nx.Graph):
                     label= ipywidgets.Label(value=name, layout=widgets.Layout(width='125px', height='50px'))
                     labels_info.children+=(label, )
         else:
-            labels_info.children=()
-                
-
-
+            labels_info.children = (ipywidgets.Label(value=f"Click on node to update labels",
+                                                     layout=widgets.Layout(width='250px', height='50px',
+                                                                           justify_content='center')),)
 
     def handle_mouseup(event):
         nonlocal mode
@@ -325,6 +324,8 @@ def edit(graph: nx.Graph):
                 visual_graph.selected_node = None
                 update_labels(labels_info, visual_graph)
 
+    CLOSE = False
+
     def handle_doubleclick(event):
         nonlocal mode
         if mode is Mode.STRUCTURE:
@@ -345,16 +346,29 @@ def edit(graph: nx.Graph):
 
 
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(perform_in_future(handle_mousedown))
-    Event(source=canvas, watched_events=['mousemove'], wait=1000 // 60).on_dom_event(perform_in_future(handle_mousemove))
+    Event(source=canvas, watched_events=['mousemove'], wait=1000 // 60).on_dom_event(
+        perform_in_future(handle_mousemove))
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(perform_in_future(handle_mouseup))
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(perform_in_future(handle_doubleclick))
 
-    # main widget view
-    main_box = widgets.HBox(
-        [labels_info_scrollable, canvas]
-    )
+    close_button = widgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'), icon='window-close')
+    physics_button = widgets.ToggleButton(
+                                value=True,
+                                description='',
+                                disabled=False,
+                                indent=False,
+                                layout=widgets.Layout(width='50px', height='50px'), icon="wrench")
+    main_box = widgets.HBox()
+    debug_text = widgets.Textarea()
 
-    # Display the widgets
+    def close(button):
+        nonlocal main_box, CLOSE
+        CLOSE = True
+        main_box.children = ()
+
+    close_button.on_click(close)
+    # main widget view
+    main_box.children = ([widgets.VBox(children=(labels_info_scrollable, widgets.HBox((close_button, physics_button)))), canvas])
     display(main_box)
 
     output = ipywidgets.Output()
@@ -363,15 +377,19 @@ def edit(graph: nx.Graph):
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
 
-    def main_loop(visual_graph):
-        while True:
-            graph_physics.update_physics(1 / 60)
-            visual_graph.normalize_positions()
-            draw_graph(canvas, visual_graph)
-            time.sleep(1 / 60)
-            for (action, args, kwargs) in actions_to_perform:
-                action(*args, **kwargs)
-            actions_to_perform.clear()
+    def main_loop(visual_graph, physics_button):
+        nonlocal CLOSE
+        try:
+            while not CLOSE:
+                graph_physics.update_physics(1 / 60, physics_button.value)
+                graph_physics.normalize_positions()
+                draw_graph(canvas, visual_graph)
+                time.sleep(1 / 60)
+                for (action, args, kwargs) in actions_to_perform:
+                    action(*args, **kwargs)
+                actions_to_perform.clear()
+        except Exception as e:
+            debug_text.value = repr(e)
 
-    thread = threading.Thread(target=main_loop, args=(visual_graph,))
+    thread = threading.Thread(target=main_loop, args=(visual_graph, physics_button))
     thread.start()

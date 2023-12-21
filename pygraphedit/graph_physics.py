@@ -1,30 +1,32 @@
 import pymunk
 
 from pygraphedit.debug import debug_text
+from pygraphedit.settings import NODE_RADIUS
 from pygraphedit.visual_graph import VisualGraph
 
 VERTEX_BODY_MASS = 1
 VERTEX_BODY_MOMENT = 1
+WALLS_WIDTH = 10
 
 def create_border(space, bounds: (int, int)):
     width, height = bounds
     # Create the ground (static) segment
-    ground = pymunk.Segment(space.static_body, (0, -20), (width, -20), 20)
+    ground = pymunk.Segment(space.static_body, (0, -WALLS_WIDTH), (width, -WALLS_WIDTH), WALLS_WIDTH)
     ground.friction = 1.0
     space.add(ground)
 
     # Create the ceiling (static) segment
-    ceiling = pymunk.Segment(space.static_body, (0, height + 20), (width, height + 20), 20)
+    ceiling = pymunk.Segment(space.static_body, (0, height + WALLS_WIDTH), (width, height + WALLS_WIDTH), WALLS_WIDTH)
     ceiling.friction = 1.0
     space.add(ceiling)
 
     # Create the left (static) segment
-    left_wall = pymunk.Segment(space.static_body, (0, -20), (-20, height), 20)
+    left_wall = pymunk.Segment(space.static_body, (-WALLS_WIDTH, 0), (-WALLS_WIDTH, height), WALLS_WIDTH)
     left_wall.friction = 1.0
     space.add(left_wall)
 
     # Create the right (static) segment
-    right_wall = pymunk.Segment(space.static_body, (width + 20, 0), (width + 20, height), 20)
+    right_wall = pymunk.Segment(space.static_body, (width + WALLS_WIDTH, 0), (width + WALLS_WIDTH, height), WALLS_WIDTH)
     right_wall.friction = 1.0
     space.add(right_wall)
 
@@ -34,8 +36,8 @@ class GraphPhysics:
         self.space = pymunk.Space()
         create_border(self.space, visual_graph.bounds)
         self.space.gravity = (0, 0)
-        self.vertices_body = {}
-        self.edge_body = {}
+        self.vertex_body: dict[any, pymunk.Body] = {}
+        self.edge_body: dict[any, pymunk.Body] = {}
         self.connection_body = {}
         for node in visual_graph.graph.nodes:
             self.add_vert(node, visual_graph.coordinates[node])
@@ -51,14 +53,14 @@ class GraphPhysics:
         visual_graph.drag_end.subscribable.subscribe(self.drag_end)
 
     def drag_start(self, node):
-        self.vertices_body[node].body_type = pymunk.Body.STATIC
+        self.vertex_body[node].body_type = pymunk.Body.STATIC
 
     def drag_end(self):
         node = self.visual_graph.dragged_node
         if node is not None:
-            self.vertices_body[node].body_type = pymunk.Body.DYNAMIC
-            self.vertices_body[node].mass = VERTEX_BODY_MASS
-            self.vertices_body[node].moment = VERTEX_BODY_MOMENT
+            self.vertex_body[node].body_type = pymunk.Body.DYNAMIC
+            self.vertex_body[node].mass = VERTEX_BODY_MASS
+            self.vertex_body[node].moment = VERTEX_BODY_MOMENT
 
     def add_vert(self, node, pos: (int, int)):
         body = pymunk.Body(VERTEX_BODY_MASS, VERTEX_BODY_MOMENT)
@@ -67,10 +69,10 @@ class GraphPhysics:
         shape.elasticity = 1.0  # Elasticity of collisions
         shape.friction = 0.0  # Friction of collisions
         self.space.add(body, shape)
-        self.vertices_body[node] = body
+        self.vertex_body[node] = body
         self.edge_body[node] = {}
         self.connection_body[node] = {}
-        for node1, body1 in self.vertices_body.items():
+        for node1, body1 in self.vertex_body.items():
             if node1 != node:
                 connection_body = pymunk.DampedSpring(body, body1, (0, 0), (0, 0), rest_length=200, stiffness=10, damping=2)
                 self.space.add(connection_body)
@@ -78,8 +80,8 @@ class GraphPhysics:
                 self.connection_body[node1][node] = connection_body
 
     def remove_vert(self, node):
-        self.space.remove(self.vertices_body[node])
-        del self.vertices_body[node]
+        self.space.remove(self.vertex_body[node])
+        del self.vertex_body[node]
         for other in self.edge_body[node]:
             self.space.remove(self.edge_body[node][other])
             del self.edge_body[other][node]
@@ -90,7 +92,7 @@ class GraphPhysics:
         del self.connection_body[node]
 
     def add_edge(self, node1, node2):
-        edge_body = pymunk.DampedSpring(self.vertices_body[node1], self.vertices_body[node2], (0, 0), (0, 0), rest_length=100, stiffness=500, damping=2)
+        edge_body = pymunk.DampedSpring(self.vertex_body[node1], self.vertex_body[node2], (0, 0), (0, 0), rest_length=100, stiffness=500, damping=2)
         self.space.add(edge_body)
         self.edge_body[node1][node2] = edge_body
         self.edge_body[node2][node1] = edge_body
@@ -102,9 +104,26 @@ class GraphPhysics:
         del self.edge_body[node2][node1]
 
     def move_node(self, node, pos: (int, int)):
-        self.vertices_body[node].position = pos
+        self.vertex_body[node].position = pos
 
-    def update_physics(self, dt):
-        self.space.step(dt)
-        for node, body in self.vertices_body.items():
-            self.visual_graph.move_node(node, body.position)
+    def update_physics(self, dt, physics):
+        if physics:
+            self.space.step(dt)
+        for node, body in self.vertex_body.items():
+            self.visual_graph.move_node(node, [body.position.x, body.position.y])
+        self.normalize_positions()
+
+    def normalize_positions(self):
+        for node, node_pos in self.visual_graph.coordinates.items():
+            if node_pos[0] < 0:
+                self.visual_graph.move_node(node, [NODE_RADIUS + 10, node_pos[1]])
+                self.vertex_body[node].velocity = [0, self.vertex_body[node].velocity.y]
+            if node_pos[1] < 0:
+                self.visual_graph.move_node(node, [node_pos[0], NODE_RADIUS + 10])
+                self.vertex_body[node].velocity = [self.vertex_body[node].velocity.x, 0]
+            if node_pos[0] > self.visual_graph.bounds[0]:
+                self.visual_graph.move_node(node, [self.visual_graph.bounds[0] - NODE_RADIUS - 10, node_pos[1]])
+                self.vertex_body[node].velocity = [0, self.vertex_body[node].velocity.y]
+            if node_pos[1] > self.visual_graph.bounds[1]:
+                self.visual_graph.move_node(node, [node_pos[0], self.visual_graph.bounds[1] - NODE_RADIUS - 10])
+                self.vertex_body[node].velocity = [self.vertex_body[node].velocity.x, 0]

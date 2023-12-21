@@ -111,14 +111,3 @@ class VisualGraph:
                 closest_edge = (u, v)
         return closest_edge, closest_dist
  
-
-    def normalize_positions(self):
-        for node, node_pos in self.coordinates.items():
-            if node_pos[0] < 0:
-                node_pos[0] = NODE_RADIUS
-            if node_pos[1] < 0:
-                node_pos[1] = NODE_RADIUS
-            if node_pos[0] > self.bounds[0]:
-                node_pos[0] = self.bounds[0] - NODE_RADIUS
-            if node_pos[1] > self.bounds[1]:
-                node_pos[1] = self.bounds[1 ] - NODE_RADIUS
