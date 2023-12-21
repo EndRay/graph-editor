@@ -315,14 +315,15 @@ def edit(graph: nx.Graph):
                     #for now the only thing that selecting an edge will do will be showing its properties
                     edge_click(clicked_edge)
                     update_labels(labels_info, visual_graph)
+                    return
 
+            # if we didn't click vertex nor edge
+            if visual_graph.selected_node is None:
+                new_node = mex(visual_graph.graph.nodes)
+                visual_graph.add_node(new_node, pos)
             else:
-                if visual_graph.selected_node is None:
-                    new_node = mex(visual_graph.graph.nodes)
-                    visual_graph.add_node(new_node, pos)
-                else:
-                    visual_graph.selected_node = None
-                    update_labels(labels_info, visual_graph)
+                visual_graph.selected_node = None
+                update_labels(labels_info, visual_graph)
 
     def handle_doubleclick(event):
         nonlocal mode
