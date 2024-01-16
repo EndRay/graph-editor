@@ -70,36 +70,35 @@ def edit(graph: nx.Graph):
     # creating canvas
     canvas = Canvas(width=800, height=500)
 
-    close_button = widgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'),
+    close_button = widgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'),
                                   icon='window-close')
     physics_button = widgets.ToggleButton(
         value=True,
         description='',
         disabled=False,
         indent=False,
-        layout=widgets.Layout(width='50px', height='50px'), icon="wrench")
+        layout=widgets.Layout(width='38px', height='38px'), icon="wrench")
 
     def close(button):
-        # set children = () for all displayed boxes
-        nonlocal CLOSE, mode_box
+        # set child3ren = () for all displayed boxes
+        nonlocal CLOSE, main_box
         CLOSE = True
         main_box.children = ()
-        mode_box.children = ()
 
     close_button.on_click(close)
 
-    struct_button = ipywidgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'),
+    struct_button = ipywidgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'),
                                       icon="plus-circle")
     struct_button.style.button_color = "LightBlue"
-    prop_button = ipywidgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'), icon="pencil")
+    prop_button = ipywidgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'), icon="pencil")
     prop_button.style.button_color = None
 
-    edge_button = ipywidgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'), icon="arrows-v")
+    edge_button = ipywidgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'), icon="arrows-v")
     edge_button.style.button_color = "LimeGreen"
-    vert_button = ipywidgets.Button(description="", layout=widgets.Layout(width='50px', height='50px'), icon="circle")
+    vert_button = ipywidgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'), icon="circle")
     vert_button.style.button_color = "LimeGreen"
     mode_box = widgets.HBox([vert_button, edge_button, struct_button, prop_button, physics_button, close_button])
-    display(mode_box)
+   # display(mode_box)
 
     add_new_label_button = ipywidgets.Button(description="",
                                              layout=widgets.Layout(width='50px', height='50px'), icon="plus")
@@ -107,7 +106,7 @@ def edit(graph: nx.Graph):
                                               layout=widgets.Layout(width='200px', height='50px'))
     labels_info = widgets.VBox()
 
-    labels_info_scrollable = widgets.Output(layout={'overflow_y': 'scroll', 'height': '500px'})
+    labels_info_scrollable = widgets.Output(layout={'overflow_y': 'scroll', 'height': '450px'})
     with labels_info_scrollable:
         display(labels_info)
 
@@ -412,7 +411,7 @@ def edit(graph: nx.Graph):
     debug_text = widgets.Textarea()
 
     # main widget view
-    main_box.children = ([labels_info_scrollable, canvas])
+    main_box.children = ([ipywidgets.VBox((mode_box, labels_info_scrollable)), canvas])
     display(main_box)
 
     output = ipywidgets.Output()
