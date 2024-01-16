@@ -70,14 +70,14 @@ def edit(graph: nx.Graph):
     # creating canvas
     canvas = Canvas(width=800, height=500)
 
-    close_button = widgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'),
+    close_button = widgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'),
                                   icon='window-close')
     physics_button = widgets.ToggleButton(
         value=True,
         description='',
         disabled=False,
         indent=False,
-        layout=widgets.Layout(width='38px', height='38px'), icon="wrench")
+        layout=widgets.Layout(width='39px', height='39px'), icon="wrench")
 
     def close(button):
         # set child3ren = () for all displayed boxes
@@ -87,23 +87,23 @@ def edit(graph: nx.Graph):
 
     close_button.on_click(close)
 
-    struct_button = ipywidgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'),
+    struct_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'),
                                       icon="plus-circle")
     struct_button.style.button_color = "LightBlue"
-    prop_button = ipywidgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'), icon="pencil")
+    prop_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'), icon="pencil")
     prop_button.style.button_color = None
 
-    edge_button = ipywidgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'), icon="arrows-v")
+    edge_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'), icon="arrows-v")
     edge_button.style.button_color = "LimeGreen"
-    vert_button = ipywidgets.Button(description="", layout=widgets.Layout(width='38px', height='38px'), icon="circle")
+    vert_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'), icon="circle")
     vert_button.style.button_color = "LimeGreen"
     mode_box = widgets.HBox([vert_button, edge_button, struct_button, prop_button, physics_button, close_button])
    # display(mode_box)
 
     add_new_label_button = ipywidgets.Button(description="",
-                                             layout=widgets.Layout(width='50px', height='50px'), icon="plus")
+                                             layout=widgets.Layout(width='35px', height='35px'), icon="plus")
     label_name_text_box = ipywidgets.Textarea(placeholder='Label name',
-                                              layout=widgets.Layout(width='200px', height='50px'))
+                                              layout=widgets.Layout(width='215px', height='35px'))
     labels_info = widgets.VBox()
 
     labels_info_scrollable = widgets.Output(layout={'overflow_y': 'scroll', 'height': '450px'})
@@ -118,9 +118,9 @@ def edit(graph: nx.Graph):
             else:
                 visual_graph.new_node_label(new_label_name)
 
-            label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='100px', height='50px'))
+            label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='100px', height='30px'))
             label_label = ipywidgets.Label(value=str(label_name.value),
-                                           layout=widgets.Layout(width='150px', height='50px'),
+                                           layout=widgets.Layout(width='150px', height='30px'),
                                            justify_content='center')
             label_label.layout.border = '2px solid #000000'
             label_label.style = style_label.style
@@ -138,9 +138,9 @@ def edit(graph: nx.Graph):
             else:
                 visual_graph.new_edge_label(new_label_name)
 
-            label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='100px', height='50px'))
+            label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='100px', height='30px'))
             label_label = ipywidgets.Label(value=str(label_name.value),
-                                           layout=widgets.Layout(width='150px', height='50px'),
+                                           layout=widgets.Layout(width='150px', height='30px'),
                                            justify_content='center')
             label_label.layout.border = '2px solid #000000'
             label_label.style = style_label.style
@@ -266,13 +266,13 @@ def edit(graph: nx.Graph):
         if mode is Mode.PROPERTIES:
             if visual_graph.selected_node is not None:
                 labels_info.children = (ipywidgets.Label(value=f"Node {repr(visual_graph.selected_node)}",
-                                                         layout=widgets.Layout(width='250px', height='50px',
+                                                         layout=widgets.Layout(width='250px', height='30px',
                                                                                justify_content='center')),)
                 for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
                     label_value = ipywidgets.Textarea(
                         value=str(visual_graph.graph.nodes[visual_graph.selected_node][i]),
-                        layout=widgets.Layout(width='100px', height='50px'))
-                    label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='150px', height='50px'))
+                        layout=widgets.Layout(width='100px', height='30px'))
+                    label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='150px', height='30px'))
                     label_label.layout.border = '2px solid #000000'
                     label_label.style = style_label.style
                     new_label = ipywidgets.HBox([label_label, label_value])
@@ -286,13 +286,13 @@ def edit(graph: nx.Graph):
                 labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
             elif visual_graph.selected_edge is not None:
                 labels_info.children = (ipywidgets.Label(value=f"Edge {repr(visual_graph.selected_edge)}",
-                                                         layout=widgets.Layout(width='250px', height='50px',
+                                                         layout=widgets.Layout(width='250px', height='30px',
                                                                                justify_content='center')),)
                 for i in visual_graph.graph.edges[visual_graph.selected_edge].keys():
                     label_value = ipywidgets.Textarea(
                         value=str(visual_graph.graph.edges[visual_graph.selected_edge][i]),
-                        layout=widgets.Layout(width='100px', height='50px'))
-                    label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='150px', height='50px'))
+                        layout=widgets.Layout(width='100px', height='30px'))
+                    label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='150px', height='30px'))
                     label_label.layout.border = '2px solid #000000'
                     label_label.style = style_label.style
                     new_label = ipywidgets.HBox([label_label, label_value])
@@ -306,29 +306,29 @@ def edit(graph: nx.Graph):
                 labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
             else:
                 labels_info.children = (ipywidgets.Label(value=f"Node labels: ",
-                                                         layout=widgets.Layout(width='250px', height='50px',
+                                                         layout=widgets.Layout(width='250px', height='30px',
                                                                                justify_content='center')),)
                 for name in visual_graph.vertex_labels:
-                    label = ipywidgets.Label(value=name, layout=widgets.Layout(width='200px', height='50px'))
+                    label = ipywidgets.Label(value=name, layout=widgets.Layout(width='215px', height='35px'))
                     label.layout.border = '2px solid #000000'
                     label.style = style_label.style
 
-                    button = ipywidgets.Button(layout=widgets.Layout(width='50px', height='50px'), icon="trash-o")
+                    button = ipywidgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
                     labels_info.children += (ipywidgets.HBox((label, button)),)
 
                 labels_info.children += (ipywidgets.Label(value=f"Edge labels: ",
-                                                          layout=widgets.Layout(width='250px', height='50px',
+                                                          layout=widgets.Layout(width='250px', height='30px',
                                                                                 justify_content='center')),)
                 for name in visual_graph.edge_labels:
-                    label = ipywidgets.Label(value=name, layout=widgets.Layout(width='200px', height='50px'))
+                    label = ipywidgets.Label(value=name, layout=widgets.Layout(width='215px', height='35px'))
                     label.layout.border = '2px solid #000000'
                     label.style = style_label.style
-                    button = ipywidgets.Button(layout=widgets.Layout(width='50px', height='50px'), icon="trash-o")
+                    button = ipywidgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
 
                     labels_info.children += (ipywidgets.HBox((label, button)),)
         else:
             labels_info.children = (ipywidgets.Label(value=f"Click on node to update labels",
-                                                     layout=widgets.Layout(width='250px', height='50px',
+                                                     layout=widgets.Layout(width='250px', height='35px',
                                                                            justify_content='center')),)
 
     def handle_mouseup(event):
