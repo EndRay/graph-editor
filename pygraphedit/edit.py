@@ -94,9 +94,9 @@ def edit(graph: nx.Graph):
     prop_button.style.button_color = None
 
     edge_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'), icon="arrows-v")
-    edge_button.style.button_color = "LimeGreen"
+    edge_button.style.button_color = "LightGreen"
     vert_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'), icon="circle")
-    vert_button.style.button_color = "LimeGreen"
+    vert_button.style.button_color = "LightGreen"
     mode_box = widgets.HBox([vert_button, edge_button, struct_button, prop_button, physics_button, close_button])
    # display(mode_box)
 
@@ -190,21 +190,21 @@ def edit(graph: nx.Graph):
         nonlocal vertex_select, visual_graph
         vertex_select = not vertex_select
         if vertex_select:
-            button_widget.style.button_color = "LimeGreen"
+            button_widget.style.button_color = "LightGreen"
         else:
             visual_graph.selected_node = None
             update_labels(labels_info, visual_graph)
-            button_widget.style.button_color = "Red"
+            button_widget.style.button_color = "lightcoral"
 
     def click_edge_select(button_widget):
         nonlocal edge_select, visual_graph
         edge_select = not edge_select
         if edge_select:
-            button_widget.style.button_color = "LimeGreen"
+            button_widget.style.button_color = "LightGreen"
         else:
             visual_graph.selected_edge = None
             update_labels(labels_info, visual_graph)
-            button_widget.style.button_color = "Red"
+            button_widget.style.button_color = "lightcoral"
 
     edge_button.on_click(partial(click_edge_select))
     vert_button.on_click(partial(click_verts_select))
