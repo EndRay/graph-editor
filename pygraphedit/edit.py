@@ -60,7 +60,6 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
 def edit(graph: nx.Graph):
     visual_graph = VisualGraph(graph, (800, 500))
 
-
     style_label = widgets.Label()
     style_label.layout.border = '2px solid #000000'
     style_label.style.font_weight = 'bold'
@@ -70,11 +69,13 @@ def edit(graph: nx.Graph):
     # creating canvas
     canvas = Canvas(width=800, height=500)
 
-    close_button = widgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'),
+    close_button = widgets.Button(description="",
+                                  tooltip='Exit',
+                                  layout=widgets.Layout(width='39px', height='39px'),
                                   icon='window-close')
     physics_button = widgets.ToggleButton(
         value=True,
-        description='',
+        tooltip='Turn physics on/off',
         disabled=False,
         indent=False,
         layout=widgets.Layout(width='39px', height='39px'), icon="wrench")
@@ -87,18 +88,22 @@ def edit(graph: nx.Graph):
 
     close_button.on_click(close)
 
-    struct_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'),
+    struct_button = ipywidgets.Button(tooltip='Click to activate edges and vertices creation/deletion', description="",
+                                      layout=widgets.Layout(width='39px', height='39px'),
                                       icon="plus-circle")
     struct_button.style.button_color = "LightBlue"
-    prop_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'), icon="pencil")
+    prop_button = ipywidgets.Button(tooltip='Click to modify properties of edges and vertices', description="",
+                                    layout=widgets.Layout(width='39px', height='39px'), icon="pencil")
     prop_button.style.button_color = None
 
-    edge_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'), icon="arrows-v")
+    edge_button = ipywidgets.Button(tooltip='Edges selection enabled/disabled', description="",
+                                    layout=widgets.Layout(width='39px', height='39px'), icon="arrows-v")
     edge_button.style.button_color = "LightGreen"
-    vert_button = ipywidgets.Button(description="", layout=widgets.Layout(width='39px', height='39px'), icon="circle")
+    vert_button = ipywidgets.Button(tooltip='Vertices selection enabled/disabled', description="",
+                                    layout=widgets.Layout(width='39px', height='39px'), icon="circle")
     vert_button.style.button_color = "LightGreen"
     mode_box = widgets.HBox([vert_button, edge_button, struct_button, prop_button, physics_button, close_button])
-   # display(mode_box)
+    # display(mode_box)
 
     add_new_label_button = ipywidgets.Button(description="",
                                              layout=widgets.Layout(width='35px', height='35px'), icon="plus")
