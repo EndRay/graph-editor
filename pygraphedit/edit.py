@@ -204,6 +204,7 @@ def edit(graph: nx.Graph):
             button_widget.style.button_color = "LimeGreen"
         else:
             visual_graph.selected_edge = None
+            update_labels(labels_info, visual_graph)
             button_widget.style.button_color = "Red"
 
     edge_button.on_click(partial(click_edge_select))
