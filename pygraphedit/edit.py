@@ -359,7 +359,6 @@ def edit(graph: nx.Graph):
 
                     elif not visual_graph.graph.has_edge(visual_graph.selected_node, node):
                         visual_graph.add_edge(visual_graph.selected_node, node)
-                        visual_graph.selected_node = None
                     else:
                         visual_graph.selected_node = node
                         update_labels(labels_info, visual_graph)
