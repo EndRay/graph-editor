@@ -102,7 +102,10 @@ def edit(graph: nx.Graph):
     vert_button = ipywidgets.Button(tooltip='Vertices selection enabled/disabled', description="",
                                     layout=widgets.Layout(width='39px', height='39px'), icon="circle")
     vert_button.style.button_color = "LightGreen"
-    mode_box = widgets.HBox([vert_button, edge_button, struct_button, prop_button, physics_button, close_button])
+
+    mode_box = widgets.HBox([widgets.HBox((struct_button, prop_button),
+                                          layout=widgets.Layout(border='0.5px solid #000000')),
+                             vert_button, edge_button, physics_button, close_button])
     # display(mode_box)
 
     add_new_label_button = ipywidgets.Button(description="",
@@ -332,9 +335,10 @@ def edit(graph: nx.Graph):
 
                     labels_info.children += (ipywidgets.HBox((label, button)),)
         else:
-            labels_info.children = (ipywidgets.Label(value=f"Click on node to update labels",
-                                                     layout=widgets.Layout(width='250px', height='35px',
-                                                                           justify_content='center')),)
+            # justify_content='center'
+            labels_info.children = (ipywidgets.Label(value=f"", layout=widgets.Layout(width='250px',
+                                                                                      height='70px',
+                                                                                      align_items="stretch")),)
 
     def handle_mouseup(event):
         nonlocal mode

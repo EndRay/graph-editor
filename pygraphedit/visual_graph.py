@@ -27,12 +27,13 @@ class VisualGraph:
 
     @subscribable
     def add_node(self, node, pos: (int, int)):
-        self.graph.add_node(node)
+        self.graph.add_node(node, **dict.fromkeys(self.vertex_labels, ""))
         self.coordinates[node] = pos
 
     @subscribable
     def add_edge(self, node1, node2):
-        self.graph.add_edge(node1, node2)
+        self.graph.add_edge(node1, node2, **dict.fromkeys(self.edge_labels, ""))
+
     
     @subscribable
     def remove_node(self, node):
