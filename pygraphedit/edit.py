@@ -231,44 +231,6 @@ def edit(graph: nx.Graph):
         else:
             visual_graph.selected_edge = None
 
-    def handle_mousedown(event):
-        nonlocal mode
-        nonlocal start_mouse_position
-        start_mouse_position = (event['relativeX'], event['relativeY'])
-        if mode is Mode.PROPERTIES:
-            if vertex_select:
-                clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
-                if dist < NODE_CLICK_RADIUS:
-                    node_click(clicked_node)
-                    update_labels(labels_info, visual_graph)
-                    return
-
-            if edge_select:
-                clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
-                if dist < EDGE_CLICK_RADIUS:
-                    visual_graph.selected_node = None
-                    # we will select the edge also when dragging, this behaviour can be changed
-                    edge_click(clicked_edge)
-                    update_labels(labels_info, visual_graph)
-
-        else:
-            if vertex_select:
-                clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
-                if dist < NODE_CLICK_RADIUS:
-                    visual_graph.drag_start(clicked_node)
-                    visual_graph.selected_edge = None
-                    return
-
-    def handle_mousemove(event):
-        nonlocal mode, is_drag, EPS
-        distance = abs(start_mouse_position[0] - event['relativeX']) + abs(start_mouse_position[1] - event['relativeY'])
-        if mode is Mode.STRUCTURE:
-            nonlocal is_drag
-            if visual_graph.dragged_node is not None and distance > EPS:
-                is_drag = True
-                pos = (event['relativeX'], event['relativeY'])
-                visual_graph.move_node(visual_graph.dragged_node, pos)
-
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
         nonlocal mode
         if mode is Mode.PROPERTIES:
@@ -336,9 +298,46 @@ def edit(graph: nx.Graph):
                     labels_info.children += (ipywidgets.HBox((label, button)),)
         else:
             # justify_content='center'
-            labels_info.children = (ipywidgets.Label(value=f"", layout=widgets.Layout(width='250px',
-                                                                                      height='70px',
-                                                                                      align_items="stretch")),)
+            labels_info.children = (ipywidgets.Label(value=f"", layout=widgets.Layout(width='250px', height='70px', align_items="stretch")
+                                                     ),)
+    def handle_mousedown(event):
+        nonlocal mode
+        nonlocal start_mouse_position
+        start_mouse_position = (event['relativeX'], event['relativeY'])
+        if mode is Mode.PROPERTIES:
+            if vertex_select:
+                clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
+                if dist < NODE_CLICK_RADIUS:
+                    node_click(clicked_node)
+                    update_labels(labels_info, visual_graph)
+                    return
+
+            if edge_select:
+                clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
+                if dist < EDGE_CLICK_RADIUS:
+                    visual_graph.selected_node = None
+                    # we will select the edge also when dragging, this behaviour can be changed
+                    edge_click(clicked_edge)
+                    update_labels(labels_info, visual_graph)
+
+        else:
+            if vertex_select:
+                clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
+                if dist < NODE_CLICK_RADIUS:
+                    visual_graph.drag_start(clicked_node)
+                    visual_graph.selected_edge = None
+                    return
+
+    def handle_mousemove(event):
+        nonlocal mode, is_drag, EPS
+        distance = abs(start_mouse_position[0] - event['relativeX']) + abs(start_mouse_position[1] - event['relativeY'])
+        if mode is Mode.STRUCTURE:
+            nonlocal is_drag
+            if visual_graph.dragged_node is not None and distance > EPS:
+                is_drag = True
+                pos = (event['relativeX'], event['relativeY'])
+                visual_graph.move_node(visual_graph.dragged_node, pos)
+
 
     def handle_mouseup(event):
         nonlocal mode
@@ -390,7 +389,6 @@ def edit(graph: nx.Graph):
                 visual_graph.selected_node = None
                 update_labels(labels_info, visual_graph)
 
-    CLOSE = False
 
     def handle_doubleclick(event):
         nonlocal mode
@@ -428,6 +426,8 @@ def edit(graph: nx.Graph):
 
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
+
+    CLOSE = False
 
     def main_loop(visual_graph, physics_button):
         nonlocal CLOSE
