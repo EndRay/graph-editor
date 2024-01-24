@@ -1,13 +1,11 @@
 import threading
 import time
 import pygraphedit.graphics as graphics
-import ipywidgets
 import ipywidgets as widgets
 import networkx as nx
 from IPython.display import display
-from ipycanvas import Canvas, hold_canvas
+from ipycanvas import Canvas
 from ipyevents import Event
-from ipywidgets import HTML
 from pygraphedit.graph_physics import GraphPhysics
 from pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_CLICK_RADIUS, NODE_RADIUS, EDGE_CLICK_RADIUS
 from pygraphedit.visual_graph import VisualGraph
@@ -104,13 +102,11 @@ def edit(graph: nx.Graph):
     
     #labels
     #######################
-    add_new_label_button = ipywidgets.Button(description="",
-                                             layout=widgets.Layout(width='35px', height='35px'), icon="plus")
-    label_name_text_box = ipywidgets.Textarea(placeholder='Label name',
-                                              layout=widgets.Layout(width='215px', height='35px'))
+    
     labels_info = widgets.VBox()
+    add_label_box = graphics.AddLabelBox()
 
-    labels_info_scrollable = widgets.Output(layout={'overflow_y': 'scroll', 'height': '450px'})
+    labels_info_scrollable = graphics.get_labels_info_scrollable()
     with labels_info_scrollable:
         display(labels_info)
 
@@ -122,43 +118,32 @@ def edit(graph: nx.Graph):
             else:
                 visual_graph.new_node_label(new_label_name)
 
-            label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='100px', height='30px'))
-            label_label = ipywidgets.Label(value=str(label_name.value),
-                                           layout=widgets.Layout(width='150px', height='30px'),
-                                           justify_content='center')
-            label_label.layout.border = '2px solid #000000'
-            label_label.style = style_label.style
-            new_label = ipywidgets.HBox([label_label, label_value])
+            new_label = graphics.label_box(str(label_name.value), "")
 
             def modify_label(change, visual_graph: VisualGraph):
                 visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = change["new"]
 
             on_change = partial(modify_label, visual_graph=visual_graph)
-            label_value.observe(on_change, names="value")
+            new_label.label_value.observe(on_change, names="value")
             labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
+
         elif visual_graph.selected_edge is not None:
             if new_label_name in visual_graph.edge_labels:
                 return
             else:
                 visual_graph.new_edge_label(new_label_name)
 
-            label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='100px', height='30px'))
-            label_label = ipywidgets.Label(value=str(label_name.value),
-                                           layout=widgets.Layout(width='150px', height='30px'),
-                                           justify_content='center')
-            label_label.layout.border = '2px solid #000000'
-            label_label.style = style_label.style
-            new_label = ipywidgets.HBox([label_label, label_value])
+            new_label = graphics.label_box(str(label_name.value), "")
 
             def modify_label(change, visual_graph: VisualGraph):
                 visual_graph.graph.edges[visual_graph.selected_edge][new_label_name] = change["new"]
 
             on_change = partial(modify_label, visual_graph=visual_graph)
-            label_value.observe(on_change, names="value")
+            new_label.label_value.observe(on_change, names="value")
             labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
 
-    on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph, label_name=label_name_text_box)
-    add_new_label_button.on_click(on_click)
+    on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph, label_name=add_label_box.label_name_text_box)
+    add_label_box.add_new_label_button.on_click(on_click)
     
     def perform_in_future(action):
         def event_consumer(*args, **kwargs):
@@ -198,7 +183,7 @@ def edit(graph: nx.Graph):
                     new_label.label_value.observe(on_change, names="value")
                     labels_info.children += (new_label,)
 
-                labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
+                labels_info.children += (widgets.VBox([add_label_box]),)
 
             elif visual_graph.selected_edge is not None:
                 head_text=f"Edge {repr(visual_graph.selected_edge)}"
@@ -214,7 +199,7 @@ def edit(graph: nx.Graph):
                     on_change = partial(modify_label, visual_graph=visual_graph)
                     new_label.label_value.observe(on_change, names="value")
                     labels_info.children += (new_label,)
-                labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
+                labels_info.children += (widgets.VBox([add_label_box]),)
 
             else:
                 labels_info.children = (graphics.get_head_label(f"Node labels: "),)
@@ -225,7 +210,7 @@ def edit(graph: nx.Graph):
                 for name in visual_graph.edge_labels:
                     labels_info.children += (graphics.label_list_box(name),)
         else:
-            labels_info.children = (graphics.get_some_other_lable_that_i_dont_know_what_it_is(),)
+            labels_info.children = (graphics.get_some_other_label_that_i_dont_know_what_it_is(),)
 
     ##############################
     
@@ -354,12 +339,13 @@ def edit(graph: nx.Graph):
     main_box = widgets.HBox()
     debug_text = widgets.Textarea()
 
-    main_box.children = ([ipywidgets.VBox((mode_box, labels_info_scrollable)), canvas])
+    main_box.children = ([widgets.VBox((mode_box, labels_info_scrollable)), canvas])
     display(main_box)
 
-    output = ipywidgets.Output()
+    output = widgets.Output()
     display(output)
 
+    display(debug_text)
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
 

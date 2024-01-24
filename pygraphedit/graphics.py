@@ -28,10 +28,6 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
                         size=(DRAGGED_NODE_RADIUS if node == visual_graph.dragged_node else NODE_RADIUS),
                         colorcode=("red" if node == visual_graph.selected_node else "black"))
 
-class SimpleLabel(widgets.Label):
-    def __init__(self):
-        pass
-
 class SmallButton(widgets.Button):
     def __init__(self, tooltip=None, icon=None, active_color=None, inactive_color=None):
         pass
@@ -79,13 +75,13 @@ def get_label_style():
         font_variant="small-caps")
 
 class label_box(widgets.HBox):
-    def __init__(self, index, str_value):
+    def __init__(self, label_value, text_value):
         super().__init__()
-        self.label_value = widgets.Textarea(value=str_value,
+        self.label_value = widgets.Textarea(value=text_value,
             layout=widgets.Layout(width='100px', height='30px'),
             style=get_label_style())
 
-        label_label = widgets.Label(value=index, 
+        label_label = widgets.Label(value=label_value, 
             layout=widgets.Layout(width='150px', height='30px'))
 
         label_label.layout.border = '2px solid #000000'
@@ -112,5 +108,18 @@ def get_style_label():
 def get_head_label(text):
     return widgets.Label(value=text, layout=widgets.Layout(width='250px', height='30px',justify_content='center'))
 
-def get_some_other_lable_that_i_dont_know_what_it_is():
+#this should of course be changed, but i will leave it for now
+def get_some_other_label_that_i_dont_know_what_it_is():
     return widgets.Label(value=f"", layout=widgets.Layout(width='250px', height='70px', align_items='stretch'))
+
+class AddLabelBox(widgets.HBox):
+    def __init__(self):
+        super().__init__()
+        self.add_new_label_button = widgets.Button(description="",
+                                             layout=widgets.Layout(width='35px', height='35px'), icon="plus")
+        self.label_name_text_box = widgets.Textarea(placeholder='Label name',
+                                              layout=widgets.Layout(width='215px', height='35px'))
+        self.children=(self.label_name_text_box, self.add_new_label_button)
+                                              
+def get_labels_info_scrollable():
+    return widgets.Output(layout={'overflow_y': 'scroll', 'height': '450px'})
