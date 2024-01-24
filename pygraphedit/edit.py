@@ -118,7 +118,7 @@ def edit(graph: nx.Graph):
             else:
                 visual_graph.new_node_label(new_label_name)
 
-            new_label = graphics.label_box(str(label_name.value), "")
+            new_label = graphics.LabelBox(str(label_name.value), "")
 
             def modify_label(change, visual_graph: VisualGraph):
                 visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = change["new"]
@@ -133,7 +133,7 @@ def edit(graph: nx.Graph):
             else:
                 visual_graph.new_edge_label(new_label_name)
 
-            new_label = graphics.label_box(str(label_name.value), "")
+            new_label = graphics.LabelBox(str(label_name.value), "")
 
             def modify_label(change, visual_graph: VisualGraph):
                 visual_graph.graph.edges[visual_graph.selected_edge][new_label_name] = change["new"]
@@ -144,26 +144,6 @@ def edit(graph: nx.Graph):
 
     on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph, label_name=add_label_box.label_name_text_box)
     add_label_box.add_new_label_button.on_click(on_click)
-    
-    def perform_in_future(action):
-        def event_consumer(*args, **kwargs):
-            actions_to_perform.append((action, args, kwargs))
-
-        return event_consumer
-
-    def node_click(node):
-        visual_graph.selected_edge = None
-        if visual_graph.selected_node is None or visual_graph.selected_node != node:
-            visual_graph.selected_node = node
-        else:
-            visual_graph.selected_node = None
-
-    def edge_click(edge):
-        visual_graph.selected_node = None
-        if visual_graph.selected_edge is None or visual_graph.selected_edge != edge:
-            visual_graph.selected_edge = edge
-        else:
-            visual_graph.selected_edge = None
 
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
         nonlocal mode
@@ -174,7 +154,7 @@ def edit(graph: nx.Graph):
 
                 for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
                     value=str(visual_graph.graph.nodes[visual_graph.selected_node][i])
-                    new_label = graphics.label_box(str(i),value)
+                    new_label = graphics.LabelBox(str(i),value)
 
                     def modify_label(change, visual_graph: VisualGraph):
                         visual_graph.graph.nodes[visual_graph.selected_node][i] = change["new"]
@@ -191,7 +171,7 @@ def edit(graph: nx.Graph):
 
                 for i in visual_graph.graph.edges[visual_graph.selected_edge].keys():
                     value=str(visual_graph.graph.edges[visual_graph.selected_edge][i])
-                    new_label = graphics.label_box(str(i),value)
+                    new_label = graphics.LabelBox(str(i),value)
 
                     def modify_label(change, visual_graph: VisualGraph):
                         visual_graph.graph.edges[visual_graph.selected_edge][i] = change["new"]
@@ -204,11 +184,11 @@ def edit(graph: nx.Graph):
             else:
                 labels_info.children = (graphics.get_head_label(f"Node labels: "),)
                 for name in visual_graph.vertex_labels:
-                    labels_info.children += (graphics.label_list_box(name),)
+                    labels_info.children += (graphics.LabelListBox(name),)
 
                 labels_info.children += (graphics.get_head_label(f"Edge labels: "),)
                 for name in visual_graph.edge_labels:
-                    labels_info.children += (graphics.label_list_box(name),)
+                    labels_info.children += (graphics.LabelListBox(name),)
         else:
             labels_info.children = (graphics.get_some_other_label_that_i_dont_know_what_it_is(),)
 
@@ -216,6 +196,21 @@ def edit(graph: nx.Graph):
     
     #canvas actions
     ##############################
+
+    def node_click(node):
+        visual_graph.selected_edge = None
+        if visual_graph.selected_node is None or visual_graph.selected_node != node:
+            visual_graph.selected_node = node
+        else:
+            visual_graph.selected_node = None
+
+    def edge_click(edge):
+        visual_graph.selected_node = None
+        if visual_graph.selected_edge is None or visual_graph.selected_edge != edge:
+            visual_graph.selected_edge = edge
+        else:
+            visual_graph.selected_edge = None
+
     def handle_mousedown(event):
         nonlocal mode
         nonlocal start_mouse_position
@@ -323,6 +318,12 @@ def edit(graph: nx.Graph):
                     visual_graph.selected_edge = None
                     visual_graph.remove_edge(clicked_edge[0], clicked_edge[1])
                     debug_text.value = str(clicked_edge)
+        
+    def perform_in_future(action):
+        def event_consumer(*args, **kwargs):
+            actions_to_perform.append((action, args, kwargs))
+
+        return event_consumer
 
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(perform_in_future(handle_mousedown))
     Event(source=canvas, watched_events=['mousemove'], wait=1000 // 60).on_dom_event(

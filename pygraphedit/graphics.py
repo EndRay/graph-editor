@@ -74,7 +74,7 @@ def get_label_style():
         background='#d3d3d3',
         font_variant="small-caps")
 
-class label_box(widgets.HBox):
+class LabelBox(widgets.HBox):
     def __init__(self, label_value, text_value):
         super().__init__()
         self.label_value = widgets.Textarea(value=text_value,
@@ -87,7 +87,7 @@ class label_box(widgets.HBox):
         label_label.layout.border = '2px solid #000000'
         self.children=(label_label, self.label_value)
 
-class label_list_box(widgets.HBox):
+class LabelListBox(widgets.HBox):
     def __init__(self, str_value):
         super().__init__()
         self.label = widgets.Label(value=str_value, 
