@@ -16,7 +16,6 @@ from enum import Enum
 from pygraphedit.debug import debug_text
 import traceback  #for debugging, can be removed
 
-EDGE_CLICK_RADIUS = 25
 
 
 class Mode(Enum):
