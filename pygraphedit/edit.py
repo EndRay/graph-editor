@@ -217,31 +217,16 @@ def edit(graph: nx.Graph):
                 labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
 
             else:
-                labels_info.children = (ipywidgets.Label(value=f"Node labels: ",
-                                                         layout=widgets.Layout(width='250px', height='30px',
-                                                                               justify_content='center')),)
+                labels_info.children = (graphics.get_head_label(f"Node labels: "),)
                 for name in visual_graph.vertex_labels:
-                    label = ipywidgets.Label(value=name, layout=widgets.Layout(width='215px', height='35px'))
-                    label.layout.border = '2px solid #000000'
-                    label.style = style_label.style
+                    labels_info.children += (graphics.label_list_box(name),)
 
-                    button = ipywidgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
-                    labels_info.children += (ipywidgets.HBox((label, button)),)
-
-                labels_info.children += (ipywidgets.Label(value=f"Edge labels: ",
-                                                          layout=widgets.Layout(width='250px', height='30px',
-                                                                                justify_content='center')),)
+                labels_info.children += (graphics.get_head_label(f"Edge labels: "),)
                 for name in visual_graph.edge_labels:
-                    label = ipywidgets.Label(value=name, layout=widgets.Layout(width='215px', height='35px'))
-                    label.layout.border = '2px solid #000000'
-                    label.style = style_label.style
-                    button = ipywidgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
-
-                    labels_info.children += (ipywidgets.HBox((label, button)),)
+                    labels_info.children += (graphics.label_list_box(name),)
         else:
-            # justify_content='center'
-            labels_info.children = (ipywidgets.Label(value=f"", layout=widgets.Layout(width='250px', height='70px', align_items="stretch")
-                                                     ),)
+            labels_info.children = (graphics.get_some_other_lable_that_i_dont_know_what_it_is(),)
+
     ##############################
     
     #canvas actions

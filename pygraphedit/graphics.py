@@ -91,7 +91,15 @@ class label_box(widgets.HBox):
         label_label.layout.border = '2px solid #000000'
         self.children=(label_label, self.label_value)
 
-
+class label_list_box(widgets.HBox):
+    def __init__(self, str_value):
+        super().__init__()
+        self.label = widgets.Label(value=str_value, 
+            layout=widgets.Layout(width='215px', height='35px'),
+            style=get_label_style())
+        self.label.layout.border = '2px solid #000000'
+        self.button = widgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
+        self.children = (self.label, self.button)
 
 def get_style_label():
     style_label = widgets.Label()
@@ -103,3 +111,6 @@ def get_style_label():
 
 def get_head_label(text):
     return widgets.Label(value=text, layout=widgets.Layout(width='250px', height='30px',justify_content='center'))
+
+def get_some_other_lable_that_i_dont_know_what_it_is():
+    return widgets.Label(value=f"", layout=widgets.Layout(width='250px', height='70px', align_items='stretch'))
