@@ -72,7 +72,24 @@ class Menu(widgets.HBox):
                                           layout=widgets.Layout(border='0.5px solid #000000')),
                              self.vert_button, self.edge_button, self.physics_button, self.close_button])
 
+def get_label_style():
+    return dict(
+        font_weight='bold',
+        background='#d3d3d3',
+        font_variant="small-caps")
 
+class label_box(widgets.HBox):
+    def __init__(self, index, str_value):
+        super().__init__()
+        self.label_value = widgets.Textarea(value=str_value,
+            layout=widgets.Layout(width='100px', height='30px'),
+            style=get_label_style())
+
+        label_label = widgets.Label(value=index, 
+            layout=widgets.Layout(width='150px', height='30px'))
+
+        label_label.layout.border = '2px solid #000000'
+        self.children=(label_label, self.label_value)
 
 
 
@@ -84,3 +101,5 @@ def get_style_label():
     style_label.style.font_variant = 'small-caps'
     return style_label
 
+def get_head_label(text):
+    return widgets.Label(value=text, layout=widgets.Layout(width='250px', height='30px',justify_content='center'))
