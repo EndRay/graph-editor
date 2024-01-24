@@ -1,6 +1,6 @@
 import threading
 import time
-
+import pygraphedit.graphics as graphics
 import ipywidgets
 import ipywidgets as widgets
 import networkx as nx
@@ -8,13 +8,13 @@ from IPython.display import display
 from ipycanvas import Canvas, hold_canvas
 from ipyevents import Event
 from ipywidgets import HTML
-
 from pygraphedit.graph_physics import GraphPhysics
 from pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_CLICK_RADIUS, NODE_RADIUS
 from pygraphedit.visual_graph import VisualGraph
 from functools import partial
 from enum import Enum
 from pygraphedit.debug import debug_text
+import traceback  #for debugging, can be removed
 
 EDGE_CLICK_RADIUS = 25
 
@@ -31,54 +31,28 @@ def mex(arr):
     return result
 
 
-def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
-    def clear_canvas():
-        canvas.clear()
-        canvas.stroke_style = "black"
-        canvas.stroke_rect(0, 0, 800, 500)
-
-    def draw_vertex(pos, size=10, colorcode="black"):
-        canvas.fill_style = colorcode
-        canvas.fill_circle(pos[0], pos[1], size)
-
-    def draw_edge(pos1, pos2, colorcode="black"):
-        canvas.stroke_style = colorcode
-        canvas.line_width = 2
-        canvas.stroke_line(*pos1, *pos2)
-
-    with hold_canvas():
-        clear_canvas()
-        for edge in visual_graph.graph.edges:
-            draw_edge(visual_graph.coordinates[edge[0]], visual_graph.coordinates[edge[1]],
-                      colorcode=("red" if edge == visual_graph.selected_edge else "black"))
-        for node, pos in visual_graph.coordinates.items():
-            draw_vertex(pos,
-                        size=(DRAGGED_NODE_RADIUS if node == visual_graph.dragged_node else NODE_RADIUS),
-                        colorcode=("red" if node == visual_graph.selected_node else "black"))
-
-
 def edit(graph: nx.Graph):
+    
+    #logical properties of the graph
+    ################################
     visual_graph = VisualGraph(graph, (800, 500))
+    CLOSE = False
+    mode = Mode.STRUCTURE
+    edge_select = True
+    vertex_select = True
+    is_drag = False
+    start_mouse_position = (0, 0)
+    actions_to_perform = []
+    EPS = 10
+    #################################
+    #################################
 
-    style_label = widgets.Label()
-    style_label.layout.border = '2px solid #000000'
-    style_label.style.font_weight = 'bold'
-    style_label.style.background = '#d3d3d3'
-    style_label.style.font_variant = 'small-caps'
-
-    # creating canvas
+    style_label = graphics.get_style_label()
     canvas = Canvas(width=800, height=500)
 
-    close_button = widgets.Button(description="",
-                                  tooltip='Exit',
-                                  layout=widgets.Layout(width='39px', height='39px'),
-                                  icon='window-close')
-    physics_button = widgets.ToggleButton(
-        value=True,
-        tooltip='Turn physics on/off',
-        disabled=False,
-        indent=False,
-        layout=widgets.Layout(width='39px', height='39px'), icon="wrench")
+    #main menu
+    #################################
+    mode_box = graphics.Menu()
 
     def close(button):
         # set child3ren = () for all displayed boxes
@@ -86,28 +60,53 @@ def edit(graph: nx.Graph):
         CLOSE = True
         main_box.children = ()
 
-    close_button.on_click(close)
+    mode_box.close_button.on_click(close)
 
-    struct_button = ipywidgets.Button(tooltip='Click to activate edges and vertices creation/deletion', description="",
-                                      layout=widgets.Layout(width='39px', height='39px'),
-                                      icon="plus-circle")
-    struct_button.style.button_color = "LightBlue"
-    prop_button = ipywidgets.Button(tooltip='Click to modify properties of edges and vertices', description="",
-                                    layout=widgets.Layout(width='39px', height='39px'), icon="pencil")
-    prop_button.style.button_color = None
+    def click_struct(button_widget):
+        nonlocal mode, mode_box
+        mode = Mode.STRUCTURE
+        button_widget.style.button_color = 'LightBlue'
+        mode_box.prop_button.style.button_color = None
+        update_labels(labels_info, visual_graph)
 
-    edge_button = ipywidgets.Button(tooltip='Edges selection enabled/disabled', description="",
-                                    layout=widgets.Layout(width='39px', height='39px'), icon="arrows-v")
-    edge_button.style.button_color = "LightGreen"
-    vert_button = ipywidgets.Button(tooltip='Vertices selection enabled/disabled', description="",
-                                    layout=widgets.Layout(width='39px', height='39px'), icon="circle")
-    vert_button.style.button_color = "LightGreen"
+    mode_box.struct_button.on_click(partial(click_struct))
 
-    mode_box = widgets.HBox([widgets.HBox((struct_button, prop_button),
-                                          layout=widgets.Layout(border='0.5px solid #000000')),
-                             vert_button, edge_button, physics_button, close_button])
-    # display(mode_box)
+    def click_prop(button_widget):
+        nonlocal mode, mode_box
+        mode = Mode.PROPERTIES
+        button_widget.style.button_color = 'LightBlue'
+        mode_box.struct_button.style.button_color = None
+        update_labels(labels_info, visual_graph)
 
+    mode_box.prop_button.on_click(partial(click_prop))
+
+    def click_verts_select(button_widget):
+        nonlocal vertex_select, visual_graph
+        vertex_select = not vertex_select
+        if vertex_select:
+            button_widget.style.button_color = "LightGreen"
+        else:
+            visual_graph.selected_node = None
+            update_labels(labels_info, visual_graph)
+            button_widget.style.button_color = "lightcoral"
+
+    mode_box.vert_button.on_click(partial(click_verts_select))
+
+    def click_edge_select(button_widget):
+        nonlocal edge_select, visual_graph
+        edge_select = not edge_select
+        if edge_select:
+            button_widget.style.button_color = "LightGreen"
+        else:
+            visual_graph.selected_edge = None
+            update_labels(labels_info, visual_graph)
+            button_widget.style.button_color = "lightcoral"
+
+    mode_box.edge_button.on_click(partial(click_edge_select))
+    #######################
+    
+    #labels
+    #######################
     add_new_label_button = ipywidgets.Button(description="",
                                              layout=widgets.Layout(width='35px', height='35px'), icon="plus")
     label_name_text_box = ipywidgets.Textarea(placeholder='Label name',
@@ -163,59 +162,12 @@ def edit(graph: nx.Graph):
 
     on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph, label_name=label_name_text_box)
     add_new_label_button.on_click(on_click)
-    mode = Mode.STRUCTURE
-    edge_select = True
-    vertex_select = True
-    is_drag = False
-    start_mouse_position = (0, 0)
-    actions_to_perform = []
-    EPS = 10
-
+    
     def perform_in_future(action):
         def event_consumer(*args, **kwargs):
             actions_to_perform.append((action, args, kwargs))
 
         return event_consumer
-
-    def click_struct(button_widget):
-        nonlocal mode, prop_button
-        mode = Mode.STRUCTURE
-        button_widget.style.button_color = 'LightBlue'
-        prop_button.style.button_color = None
-        update_labels(labels_info, visual_graph)
-
-    def click_prop(button_widget):
-        nonlocal mode, struct_button
-        mode = Mode.PROPERTIES
-        button_widget.style.button_color = 'LightBlue'
-        struct_button.style.button_color = None
-        update_labels(labels_info, visual_graph)
-
-    struct_button.on_click(partial(click_struct))
-    prop_button.on_click(partial(click_prop))
-
-    def click_verts_select(button_widget):
-        nonlocal vertex_select, visual_graph
-        vertex_select = not vertex_select
-        if vertex_select:
-            button_widget.style.button_color = "LightGreen"
-        else:
-            visual_graph.selected_node = None
-            update_labels(labels_info, visual_graph)
-            button_widget.style.button_color = "lightcoral"
-
-    def click_edge_select(button_widget):
-        nonlocal edge_select, visual_graph
-        edge_select = not edge_select
-        if edge_select:
-            button_widget.style.button_color = "LightGreen"
-        else:
-            visual_graph.selected_edge = None
-            update_labels(labels_info, visual_graph)
-            button_widget.style.button_color = "lightcoral"
-
-    edge_button.on_click(partial(click_edge_select))
-    vert_button.on_click(partial(click_verts_select))
 
     def node_click(node):
         visual_graph.selected_edge = None
@@ -300,6 +252,10 @@ def edit(graph: nx.Graph):
             # justify_content='center'
             labels_info.children = (ipywidgets.Label(value=f"", layout=widgets.Layout(width='250px', height='70px', align_items="stretch")
                                                      ),)
+    ##############################
+    
+    #canvas actions
+    ##############################
     def handle_mousedown(event):
         nonlocal mode
         nonlocal start_mouse_position
@@ -349,10 +305,10 @@ def edit(graph: nx.Graph):
                 is_drag = False
                 return
 
+            pos = (event['relativeX'], event['relativeY'])
             # selecting edges is handled with clicking, as we canot drag them
             # perhaps we should add the functionality of dragging edges as well and change that
             if vertex_select:
-                pos = (event['relativeX'], event['relativeY'])
                 node, dist = visual_graph.get_closest_node(pos)
                 if dist < NODE_CLICK_RADIUS:
                     node = visual_graph.get_closest_node(pos)[0]
@@ -414,10 +370,15 @@ def edit(graph: nx.Graph):
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(perform_in_future(handle_mouseup))
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(perform_in_future(handle_doubleclick))
 
+    ##################################
+    ##################################
+
+    #main structure and main loop
+    #############################
+
     main_box = widgets.HBox()
     debug_text = widgets.Textarea()
 
-    # main widget view
     main_box.children = ([ipywidgets.VBox((mode_box, labels_info_scrollable)), canvas])
     display(main_box)
 
@@ -427,21 +388,22 @@ def edit(graph: nx.Graph):
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
 
-    CLOSE = False
-
     def main_loop(visual_graph, physics_button):
         nonlocal CLOSE
         try:
             while not CLOSE:
                 graph_physics.update_physics(1 / 60, physics_button.value)
                 graph_physics.normalize_positions()
-                draw_graph(canvas, visual_graph)
+                graphics.draw_graph(canvas, visual_graph)
                 time.sleep(1 / 60)
                 for (action, args, kwargs) in actions_to_perform:
                     action(*args, **kwargs)
                 actions_to_perform.clear()
         except Exception as e:
-            debug_text.value = repr(e)
+            debug_text.value = traceback.format_exc()
 
-    thread = threading.Thread(target=main_loop, args=(visual_graph, physics_button))
+    thread = threading.Thread(target=main_loop, args=(visual_graph, mode_box.physics_button))
     thread.start()
+
+    ################################
+    ################################
