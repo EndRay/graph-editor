@@ -1,6 +1,3 @@
-from pygraphedit.debug import debug_text
-
-
 class Subscribable:
     def __init__(self):
         self.subscribers = []

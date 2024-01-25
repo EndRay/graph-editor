@@ -7,12 +7,13 @@ from IPython.display import display
 from ipycanvas import Canvas
 from ipyevents import Event
 from pygraphedit.graph_physics import GraphPhysics
-from pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_CLICK_RADIUS, NODE_RADIUS, EDGE_CLICK_RADIUS
+from pygraphedit.settings import NODE_CLICK_RADIUS, EDGE_CLICK_RADIUS
 from pygraphedit.visual_graph import VisualGraph
 from functools import partial
 from enum import Enum
 from pygraphedit.debug import debug_text
-import traceback  #for debugging, can be removed
+import traceback  # for debugging, can be removed
+
 
 class Mode(Enum):
     STRUCTURE = 0
@@ -27,8 +28,7 @@ def mex(arr):
 
 
 def edit(graph: nx.Graph):
-    
-    #logical properties of the graph
+    # logical properties of the graph
     ################################
     visual_graph = VisualGraph(graph, (800, 500))
     CLOSE = False
@@ -45,12 +45,11 @@ def edit(graph: nx.Graph):
     style_label = graphics.get_style_label()
     canvas = Canvas(width=800, height=500)
 
-    #main menu
+    # main menu
     #################################
     mode_box = graphics.Menu()
 
     def close(button):
-        # set child3ren = () for all displayed boxes
         nonlocal CLOSE, main_box
         CLOSE = True
         main_box.children = ()
@@ -99,10 +98,10 @@ def edit(graph: nx.Graph):
 
     mode_box.edge_button.on_click(partial(click_edge_select))
     #######################
-    
-    #labels
+
+    # labels
     #######################
-    
+
     labels_info = widgets.VBox()
     add_label_box = graphics.AddLabelBox()
 
@@ -142,19 +141,20 @@ def edit(graph: nx.Graph):
             new_label.label_value.observe(on_change, names="value")
             labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
 
-    on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph, label_name=add_label_box.label_name_text_box)
+    on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph,
+                       label_name=add_label_box.label_name_text_box)
     add_label_box.add_new_label_button.on_click(on_click)
 
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
         nonlocal mode
         if mode is Mode.PROPERTIES:
             if visual_graph.selected_node is not None:
-                head_text=f"Node {repr(visual_graph.selected_node)}"
+                head_text = f"Node {repr(visual_graph.selected_node)}"
                 labels_info.children = (graphics.get_head_label(head_text),)
 
                 for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
-                    value=str(visual_graph.graph.nodes[visual_graph.selected_node][i])
-                    new_label = graphics.LabelBox(str(i),value)
+                    value = str(visual_graph.graph.nodes[visual_graph.selected_node][i])
+                    new_label = graphics.LabelBox(str(i), value)
 
                     def modify_label(change, visual_graph: VisualGraph):
                         visual_graph.graph.nodes[visual_graph.selected_node][i] = change["new"]
@@ -166,12 +166,12 @@ def edit(graph: nx.Graph):
                 labels_info.children += (widgets.VBox([add_label_box]),)
 
             elif visual_graph.selected_edge is not None:
-                head_text=f"Edge {repr(visual_graph.selected_edge)}"
+                head_text = f"Edge {repr(visual_graph.selected_edge)}"
                 labels_info.children = (graphics.get_head_label(head_text),)
 
                 for i in visual_graph.graph.edges[visual_graph.selected_edge].keys():
-                    value=str(visual_graph.graph.edges[visual_graph.selected_edge][i])
-                    new_label = graphics.LabelBox(str(i),value)
+                    value = str(visual_graph.graph.edges[visual_graph.selected_edge][i])
+                    new_label = graphics.LabelBox(str(i), value)
 
                     def modify_label(change, visual_graph: VisualGraph):
                         visual_graph.graph.edges[visual_graph.selected_edge][i] = change["new"]
@@ -193,8 +193,8 @@ def edit(graph: nx.Graph):
             labels_info.children = (graphics.get_some_other_label_that_i_dont_know_what_it_is(),)
 
     ##############################
-    
-    #canvas actions
+
+    # canvas actions
     ##############################
 
     def node_click(node):
@@ -249,7 +249,6 @@ def edit(graph: nx.Graph):
                 pos = (event['relativeX'], event['relativeY'])
                 visual_graph.move_node(visual_graph.dragged_node, pos)
 
-
     def handle_mouseup(event):
         nonlocal mode
         # handling in PROPERTIES mode is handled with clicking, as we cannot drag in that mode
@@ -300,7 +299,6 @@ def edit(graph: nx.Graph):
                 visual_graph.selected_node = None
                 update_labels(labels_info, visual_graph)
 
-
     def handle_doubleclick(event):
         nonlocal mode
         if mode is Mode.STRUCTURE:
@@ -318,7 +316,7 @@ def edit(graph: nx.Graph):
                     visual_graph.selected_edge = None
                     visual_graph.remove_edge(clicked_edge[0], clicked_edge[1])
                     debug_text.value = str(clicked_edge)
-        
+
     def perform_in_future(action):
         def event_consumer(*args, **kwargs):
             actions_to_perform.append((action, args, kwargs))
@@ -334,7 +332,7 @@ def edit(graph: nx.Graph):
     ##################################
     ##################################
 
-    #main structure and main loop
+    # main structure and main loop
     #############################
 
     main_box = widgets.HBox()
@@ -346,7 +344,7 @@ def edit(graph: nx.Graph):
     output = widgets.Output()
     display(output)
 
-    display(debug_text)
+    # display(debug_text)
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
 
@@ -362,7 +360,8 @@ def edit(graph: nx.Graph):
                     action(*args, **kwargs)
                 actions_to_perform.clear()
         except Exception as e:
-            debug_text.value = traceback.format_exc()
+            pass
+            # debug_text.value = traceback.format_exc()
 
     thread = threading.Thread(target=main_loop, args=(visual_graph, mode_box.physics_button))
     thread.start()
