@@ -1,12 +1,12 @@
 import pymunk
 
-from pygraphedit.debug import debug_text
 from pygraphedit.settings import NODE_RADIUS
 from pygraphedit.visual_graph import VisualGraph
 
 VERTEX_BODY_MASS = 1
 VERTEX_BODY_MOMENT = 1
 WALLS_WIDTH = 10
+
 
 def create_border(space, bounds: (int, int)):
     width, height = bounds
@@ -29,6 +29,7 @@ def create_border(space, bounds: (int, int)):
     right_wall = pymunk.Segment(space.static_body, (width + WALLS_WIDTH, 0), (width + WALLS_WIDTH, height), WALLS_WIDTH)
     right_wall.friction = 1.0
     space.add(right_wall)
+
 
 class GraphPhysics:
     def __init__(self, visual_graph: VisualGraph):
@@ -74,7 +75,8 @@ class GraphPhysics:
         self.connection_body[node] = {}
         for node1, body1 in self.vertex_body.items():
             if node1 != node:
-                connection_body = pymunk.DampedSpring(body, body1, (0, 0), (0, 0), rest_length=200, stiffness=10, damping=2)
+                connection_body = pymunk.DampedSpring(body, body1, (0, 0), (0, 0), rest_length=200, stiffness=10,
+                                                      damping=2)
                 self.space.add(connection_body)
                 self.connection_body[node][node1] = connection_body
                 self.connection_body[node1][node] = connection_body
@@ -92,7 +94,8 @@ class GraphPhysics:
         del self.connection_body[node]
 
     def add_edge(self, node1, node2):
-        edge_body = pymunk.DampedSpring(self.vertex_body[node1], self.vertex_body[node2], (0, 0), (0, 0), rest_length=100, stiffness=500, damping=2)
+        edge_body = pymunk.DampedSpring(self.vertex_body[node1], self.vertex_body[node2], (0, 0), (0, 0),
+                                        rest_length=100, stiffness=500, damping=2)
         self.space.add(edge_body)
         self.edge_body[node1][node2] = edge_body
         self.edge_body[node2][node1] = edge_body

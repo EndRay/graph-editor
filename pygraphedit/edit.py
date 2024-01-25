@@ -1,22 +1,18 @@
 import threading
 import time
-
-import ipywidgets
+import pygraphedit.graphics as graphics
 import ipywidgets as widgets
 import networkx as nx
 from IPython.display import display
-from ipycanvas import Canvas, hold_canvas
+from ipycanvas import Canvas
 from ipyevents import Event
-from ipywidgets import HTML
-
 from pygraphedit.graph_physics import GraphPhysics
-from pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_CLICK_RADIUS, NODE_RADIUS
+from pygraphedit.settings import NODE_CLICK_RADIUS, EDGE_CLICK_RADIUS
 from pygraphedit.visual_graph import VisualGraph
 from functools import partial
 from enum import Enum
 from pygraphedit.debug import debug_text
-
-EDGE_CLICK_RADIUS = 25
+import traceback  # for debugging, can be removed
 
 
 class Mode(Enum):
@@ -31,138 +27,11 @@ def mex(arr):
     return result
 
 
-def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
-    def clear_canvas():
-        canvas.clear()
-        canvas.stroke_style = "black"
-        canvas.stroke_rect(0, 0, 800, 500)
-
-    def draw_vertex(pos, size=10, colorcode="black"):
-        canvas.fill_style = colorcode
-        canvas.fill_circle(pos[0], pos[1], size)
-
-    def draw_edge(pos1, pos2, colorcode="black"):
-        canvas.stroke_style = colorcode
-        canvas.line_width = 2
-        canvas.stroke_line(*pos1, *pos2)
-
-    with hold_canvas():
-        clear_canvas()
-        for edge in visual_graph.graph.edges:
-            draw_edge(visual_graph.coordinates[edge[0]], visual_graph.coordinates[edge[1]],
-                      colorcode=("red" if edge == visual_graph.selected_edge else "black"))
-        for node, pos in visual_graph.coordinates.items():
-            draw_vertex(pos,
-                        size=(DRAGGED_NODE_RADIUS if node == visual_graph.dragged_node else NODE_RADIUS),
-                        colorcode=("red" if node == visual_graph.selected_node else "black"))
-
-
 def edit(graph: nx.Graph):
+    # logical properties of the graph
+    ################################
     visual_graph = VisualGraph(graph, (800, 500))
-
-    style_label = widgets.Label()
-    style_label.layout.border = '2px solid #000000'
-    style_label.style.font_weight = 'bold'
-    style_label.style.background = '#d3d3d3'
-    style_label.style.font_variant = 'small-caps'
-
-    # creating canvas
-    canvas = Canvas(width=800, height=500)
-
-    close_button = widgets.Button(description="",
-                                  tooltip='Exit',
-                                  layout=widgets.Layout(width='39px', height='39px'),
-                                  icon='window-close')
-    physics_button = widgets.ToggleButton(
-        value=True,
-        tooltip='Turn physics on/off',
-        disabled=False,
-        indent=False,
-        layout=widgets.Layout(width='39px', height='39px'), icon="wrench")
-
-    def close(button):
-        # set child3ren = () for all displayed boxes
-        nonlocal CLOSE, main_box
-        CLOSE = True
-        main_box.children = ()
-
-    close_button.on_click(close)
-
-    struct_button = ipywidgets.Button(tooltip='Click to activate edges and vertices creation/deletion', description="",
-                                      layout=widgets.Layout(width='39px', height='39px'),
-                                      icon="plus-circle")
-    struct_button.style.button_color = "LightBlue"
-    prop_button = ipywidgets.Button(tooltip='Click to modify properties of edges and vertices', description="",
-                                    layout=widgets.Layout(width='39px', height='39px'), icon="pencil")
-    prop_button.style.button_color = None
-
-    edge_button = ipywidgets.Button(tooltip='Edges selection enabled/disabled', description="",
-                                    layout=widgets.Layout(width='39px', height='39px'), icon="arrows-v")
-    edge_button.style.button_color = "LightGreen"
-    vert_button = ipywidgets.Button(tooltip='Vertices selection enabled/disabled', description="",
-                                    layout=widgets.Layout(width='39px', height='39px'), icon="circle")
-    vert_button.style.button_color = "LightGreen"
-
-    mode_box = widgets.HBox([widgets.HBox((struct_button, prop_button),
-                                          layout=widgets.Layout(border='0.5px solid #000000')),
-                             vert_button, edge_button, physics_button, close_button])
-    # display(mode_box)
-
-    add_new_label_button = ipywidgets.Button(description="",
-                                             layout=widgets.Layout(width='35px', height='35px'), icon="plus")
-    label_name_text_box = ipywidgets.Textarea(placeholder='Label name',
-                                              layout=widgets.Layout(width='215px', height='35px'))
-    labels_info = widgets.VBox()
-
-    labels_info_scrollable = widgets.Output(layout={'overflow_y': 'scroll', 'height': '450px'})
-    with labels_info_scrollable:
-        display(labels_info)
-
-    def add_label(button_widget, labels_info: widgets.VBox, visual_graph: VisualGraph, label_name: widgets.Textarea):
-        new_label_name = str(label_name.value)
-        if visual_graph.selected_node is not None:
-            if new_label_name in visual_graph.vertex_labels:
-                return
-            else:
-                visual_graph.new_node_label(new_label_name)
-
-            label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='100px', height='30px'))
-            label_label = ipywidgets.Label(value=str(label_name.value),
-                                           layout=widgets.Layout(width='150px', height='30px'),
-                                           justify_content='center')
-            label_label.layout.border = '2px solid #000000'
-            label_label.style = style_label.style
-            new_label = ipywidgets.HBox([label_label, label_value])
-
-            def modify_label(change, visual_graph: VisualGraph):
-                visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = change["new"]
-
-            on_change = partial(modify_label, visual_graph=visual_graph)
-            label_value.observe(on_change, names="value")
-            labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
-        elif visual_graph.selected_edge is not None:
-            if new_label_name in visual_graph.edge_labels:
-                return
-            else:
-                visual_graph.new_edge_label(new_label_name)
-
-            label_value = ipywidgets.Textarea(value="", layout=widgets.Layout(width='100px', height='30px'))
-            label_label = ipywidgets.Label(value=str(label_name.value),
-                                           layout=widgets.Layout(width='150px', height='30px'),
-                                           justify_content='center')
-            label_label.layout.border = '2px solid #000000'
-            label_label.style = style_label.style
-            new_label = ipywidgets.HBox([label_label, label_value])
-
-            def modify_label(change, visual_graph: VisualGraph):
-                visual_graph.graph.edges[visual_graph.selected_edge][new_label_name] = change["new"]
-
-            on_change = partial(modify_label, visual_graph=visual_graph)
-            label_value.observe(on_change, names="value")
-            labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
-
-    on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph, label_name=label_name_text_box)
-    add_new_label_button.on_click(on_click)
+    CLOSE = False
     mode = Mode.STRUCTURE
     edge_select = True
     vertex_select = True
@@ -170,29 +39,40 @@ def edit(graph: nx.Graph):
     start_mouse_position = (0, 0)
     actions_to_perform = []
     EPS = 10
+    #################################
+    #################################
 
-    def perform_in_future(action):
-        def event_consumer(*args, **kwargs):
-            actions_to_perform.append((action, args, kwargs))
+    style_label = graphics.get_style_label()
+    canvas = Canvas(width=800, height=500)
 
-        return event_consumer
+    # main menu
+    #################################
+    mode_box = graphics.Menu()
+
+    def close(button):
+        nonlocal CLOSE, main_box
+        CLOSE = True
+        main_box.children = ()
+
+    mode_box.close_button.on_click(close)
 
     def click_struct(button_widget):
-        nonlocal mode, prop_button
+        nonlocal mode, mode_box
         mode = Mode.STRUCTURE
         button_widget.style.button_color = 'LightBlue'
-        prop_button.style.button_color = None
+        mode_box.prop_button.style.button_color = None
         update_labels(labels_info, visual_graph)
+
+    mode_box.struct_button.on_click(partial(click_struct))
 
     def click_prop(button_widget):
-        nonlocal mode, struct_button
+        nonlocal mode, mode_box
         mode = Mode.PROPERTIES
         button_widget.style.button_color = 'LightBlue'
-        struct_button.style.button_color = None
+        mode_box.struct_button.style.button_color = None
         update_labels(labels_info, visual_graph)
 
-    struct_button.on_click(partial(click_struct))
-    prop_button.on_click(partial(click_prop))
+    mode_box.prop_button.on_click(partial(click_prop))
 
     def click_verts_select(button_widget):
         nonlocal vertex_select, visual_graph
@@ -204,6 +84,8 @@ def edit(graph: nx.Graph):
             update_labels(labels_info, visual_graph)
             button_widget.style.button_color = "lightcoral"
 
+    mode_box.vert_button.on_click(partial(click_verts_select))
+
     def click_edge_select(button_widget):
         nonlocal edge_select, visual_graph
         edge_select = not edge_select
@@ -214,8 +96,106 @@ def edit(graph: nx.Graph):
             update_labels(labels_info, visual_graph)
             button_widget.style.button_color = "lightcoral"
 
-    edge_button.on_click(partial(click_edge_select))
-    vert_button.on_click(partial(click_verts_select))
+    mode_box.edge_button.on_click(partial(click_edge_select))
+    #######################
+
+    # labels
+    #######################
+
+    labels_info = widgets.VBox()
+    add_label_box = graphics.AddLabelBox()
+
+    labels_info_scrollable = graphics.get_labels_info_scrollable()
+    with labels_info_scrollable:
+        display(labels_info)
+
+    def add_label(button_widget, labels_info: widgets.VBox, visual_graph: VisualGraph, label_name: widgets.Textarea):
+        new_label_name = str(label_name.value)
+        if visual_graph.selected_node is not None:
+            if new_label_name in visual_graph.vertex_labels:
+                return
+            else:
+                visual_graph.new_node_label(new_label_name)
+
+            new_label = graphics.LabelBox(str(label_name.value), "")
+
+            def modify_label(change, visual_graph: VisualGraph):
+                visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = change["new"]
+
+            on_change = partial(modify_label, visual_graph=visual_graph)
+            new_label.label_value.observe(on_change, names="value")
+            labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
+
+        elif visual_graph.selected_edge is not None:
+            if new_label_name in visual_graph.edge_labels:
+                return
+            else:
+                visual_graph.new_edge_label(new_label_name)
+
+            new_label = graphics.LabelBox(str(label_name.value), "")
+
+            def modify_label(change, visual_graph: VisualGraph):
+                visual_graph.graph.edges[visual_graph.selected_edge][new_label_name] = change["new"]
+
+            on_change = partial(modify_label, visual_graph=visual_graph)
+            new_label.label_value.observe(on_change, names="value")
+            labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
+
+    on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph,
+                       label_name=add_label_box.label_name_text_box)
+    add_label_box.add_new_label_button.on_click(on_click)
+
+    def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
+        nonlocal mode
+        if mode is Mode.PROPERTIES:
+            if visual_graph.selected_node is not None:
+                head_text = f"Node {repr(visual_graph.selected_node)}"
+                labels_info.children = (graphics.get_head_label(head_text),)
+
+                for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
+                    value = str(visual_graph.graph.nodes[visual_graph.selected_node][i])
+                    new_label = graphics.LabelBox(str(i), value)
+
+                    def modify_label(change, visual_graph: VisualGraph):
+                        visual_graph.graph.nodes[visual_graph.selected_node][i] = change["new"]
+
+                    on_change = partial(modify_label, visual_graph=visual_graph)
+                    new_label.label_value.observe(on_change, names="value")
+                    labels_info.children += (new_label,)
+
+                labels_info.children += (widgets.VBox([add_label_box]),)
+
+            elif visual_graph.selected_edge is not None:
+                head_text = f"Edge {repr(visual_graph.selected_edge)}"
+                labels_info.children = (graphics.get_head_label(head_text),)
+
+                for i in visual_graph.graph.edges[visual_graph.selected_edge].keys():
+                    value = str(visual_graph.graph.edges[visual_graph.selected_edge][i])
+                    new_label = graphics.LabelBox(str(i), value)
+
+                    def modify_label(change, visual_graph: VisualGraph):
+                        visual_graph.graph.edges[visual_graph.selected_edge][i] = change["new"]
+
+                    on_change = partial(modify_label, visual_graph=visual_graph)
+                    new_label.label_value.observe(on_change, names="value")
+                    labels_info.children += (new_label,)
+                labels_info.children += (widgets.VBox([add_label_box]),)
+
+            else:
+                labels_info.children = (graphics.get_head_label(f"Node labels: "),)
+                for name in visual_graph.vertex_labels:
+                    labels_info.children += (graphics.LabelListBox(name),)
+
+                labels_info.children += (graphics.get_head_label(f"Edge labels: "),)
+                for name in visual_graph.edge_labels:
+                    labels_info.children += (graphics.LabelListBox(name),)
+        else:
+            labels_info.children = (graphics.get_some_other_label_that_i_dont_know_what_it_is(),)
+
+    ##############################
+
+    # canvas actions
+    ##############################
 
     def node_click(node):
         visual_graph.selected_edge = None
@@ -269,77 +249,6 @@ def edit(graph: nx.Graph):
                 pos = (event['relativeX'], event['relativeY'])
                 visual_graph.move_node(visual_graph.dragged_node, pos)
 
-    def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
-        nonlocal mode
-        if mode is Mode.PROPERTIES:
-            if visual_graph.selected_node is not None:
-                labels_info.children = (ipywidgets.Label(value=f"Node {repr(visual_graph.selected_node)}",
-                                                         layout=widgets.Layout(width='250px', height='30px',
-                                                                               justify_content='center')),)
-                for i in visual_graph.graph.nodes[visual_graph.selected_node].keys():
-                    label_value = ipywidgets.Textarea(
-                        value=str(visual_graph.graph.nodes[visual_graph.selected_node][i]),
-                        layout=widgets.Layout(width='100px', height='30px'))
-                    label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='150px', height='30px'))
-                    label_label.layout.border = '2px solid #000000'
-                    label_label.style = style_label.style
-                    new_label = ipywidgets.HBox([label_label, label_value])
-
-                    def modify_label(change, visual_graph: VisualGraph):
-                        visual_graph.graph.nodes[visual_graph.selected_node][i] = change["new"]
-
-                    on_change = partial(modify_label, visual_graph=visual_graph)
-                    label_value.observe(on_change, names="value")
-                    labels_info.children += (new_label,)
-                labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
-            elif visual_graph.selected_edge is not None:
-                labels_info.children = (ipywidgets.Label(value=f"Edge {repr(visual_graph.selected_edge)}",
-                                                         layout=widgets.Layout(width='250px', height='30px',
-                                                                               justify_content='center')),)
-                for i in visual_graph.graph.edges[visual_graph.selected_edge].keys():
-                    label_value = ipywidgets.Textarea(
-                        value=str(visual_graph.graph.edges[visual_graph.selected_edge][i]),
-                        layout=widgets.Layout(width='100px', height='30px'))
-                    label_label = ipywidgets.Label(value=str(i), layout=widgets.Layout(width='150px', height='30px'))
-                    label_label.layout.border = '2px solid #000000'
-                    label_label.style = style_label.style
-                    new_label = ipywidgets.HBox([label_label, label_value])
-
-                    def modify_label(change, visual_graph: VisualGraph):
-                        visual_graph.graph.edges[visual_graph.selected_edge][i] = change["new"]
-
-                    on_change = partial(modify_label, visual_graph=visual_graph)
-                    label_value.observe(on_change, names="value")
-                    labels_info.children += (new_label,)
-                labels_info.children += (widgets.VBox([widgets.HBox([label_name_text_box, add_new_label_button])]),)
-            else:
-                labels_info.children = (ipywidgets.Label(value=f"Node labels: ",
-                                                         layout=widgets.Layout(width='250px', height='30px',
-                                                                               justify_content='center')),)
-                for name in visual_graph.vertex_labels:
-                    label = ipywidgets.Label(value=name, layout=widgets.Layout(width='215px', height='35px'))
-                    label.layout.border = '2px solid #000000'
-                    label.style = style_label.style
-
-                    button = ipywidgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
-                    labels_info.children += (ipywidgets.HBox((label, button)),)
-
-                labels_info.children += (ipywidgets.Label(value=f"Edge labels: ",
-                                                          layout=widgets.Layout(width='250px', height='30px',
-                                                                                justify_content='center')),)
-                for name in visual_graph.edge_labels:
-                    label = ipywidgets.Label(value=name, layout=widgets.Layout(width='215px', height='35px'))
-                    label.layout.border = '2px solid #000000'
-                    label.style = style_label.style
-                    button = ipywidgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
-
-                    labels_info.children += (ipywidgets.HBox((label, button)),)
-        else:
-            # justify_content='center'
-            labels_info.children = (ipywidgets.Label(value=f"", layout=widgets.Layout(width='250px',
-                                                                                      height='70px',
-                                                                                      align_items="stretch")),)
-
     def handle_mouseup(event):
         nonlocal mode
         # handling in PROPERTIES mode is handled with clicking, as we cannot drag in that mode
@@ -350,10 +259,10 @@ def edit(graph: nx.Graph):
                 is_drag = False
                 return
 
+            pos = (event['relativeX'], event['relativeY'])
             # selecting edges is handled with clicking, as we canot drag them
             # perhaps we should add the functionality of dragging edges as well and change that
             if vertex_select:
-                pos = (event['relativeX'], event['relativeY'])
                 node, dist = visual_graph.get_closest_node(pos)
                 if dist < NODE_CLICK_RADIUS:
                     node = visual_graph.get_closest_node(pos)[0]
@@ -390,8 +299,6 @@ def edit(graph: nx.Graph):
                 visual_graph.selected_node = None
                 update_labels(labels_info, visual_graph)
 
-    CLOSE = False
-
     def handle_doubleclick(event):
         nonlocal mode
         if mode is Mode.STRUCTURE:
@@ -410,22 +317,34 @@ def edit(graph: nx.Graph):
                     visual_graph.remove_edge(clicked_edge[0], clicked_edge[1])
                     debug_text.value = str(clicked_edge)
 
+    def perform_in_future(action):
+        def event_consumer(*args, **kwargs):
+            actions_to_perform.append((action, args, kwargs))
+
+        return event_consumer
+
     Event(source=canvas, watched_events=['mousedown']).on_dom_event(perform_in_future(handle_mousedown))
     Event(source=canvas, watched_events=['mousemove'], wait=1000 // 60).on_dom_event(
         perform_in_future(handle_mousemove))
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(perform_in_future(handle_mouseup))
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(perform_in_future(handle_doubleclick))
 
+    ##################################
+    ##################################
+
+    # main structure and main loop
+    #############################
+
     main_box = widgets.HBox()
     debug_text = widgets.Textarea()
 
-    # main widget view
-    main_box.children = ([ipywidgets.VBox((mode_box, labels_info_scrollable)), canvas])
+    main_box.children = ([widgets.VBox((mode_box, labels_info_scrollable)), canvas])
     display(main_box)
 
-    output = ipywidgets.Output()
+    output = widgets.Output()
     display(output)
 
+    # display(debug_text)
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
 
@@ -435,13 +354,17 @@ def edit(graph: nx.Graph):
             while not CLOSE:
                 graph_physics.update_physics(1 / 60, physics_button.value)
                 graph_physics.normalize_positions()
-                draw_graph(canvas, visual_graph)
+                graphics.draw_graph(canvas, visual_graph)
                 time.sleep(1 / 60)
                 for (action, args, kwargs) in actions_to_perform:
                     action(*args, **kwargs)
                 actions_to_perform.clear()
         except Exception as e:
-            debug_text.value = repr(e)
+            pass
+            # debug_text.value = traceback.format_exc()
 
-    thread = threading.Thread(target=main_loop, args=(visual_graph, physics_button))
+    thread = threading.Thread(target=main_loop, args=(visual_graph, mode_box.physics_button))
     thread.start()
+
+    ################################
+    ################################
