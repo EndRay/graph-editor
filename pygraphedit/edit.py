@@ -154,13 +154,14 @@ def edit(graph: nx.Graph):
 
             else:
                 labels_info.children = (graphics.get_head_label(f"Node labels: "),)
+                
                 def remove_vertex_label(button, visual_graph, label, labels_info):
                     visual_graph.remove_vertex_label(label)
                     update_labels(labels_info=labels_info, visual_graph=visual_graph)
                 
                 for name in visual_graph.vertex_labels:
                     name_label=graphics.LabelListBox(name)
-                    name_label.button.on_click(partial(remove_vertex_label, label=name,visual_graph=visual_graph, labels_info=labels_info))
+                    name_label.delete_button.on_click(partial(remove_vertex_label, label=name,visual_graph=visual_graph, labels_info=labels_info))
                     labels_info.children += (name_label,)
                 
                 def remove_edge_label(button,visual_graph, label, labels_info):
@@ -170,7 +171,7 @@ def edit(graph: nx.Graph):
                 labels_info.children += (graphics.get_head_label(f"Edge labels: "),)
                 for name in visual_graph.edge_labels:
                     name_label=graphics.LabelListBox(name)
-                    name_label.button.on_click(partial(remove_edge_label, label=name, visual_graph=visual_graph, labels_info=labels_info))
+                    name_label.delete_button.on_click(partial(remove_edge_label, label=name, visual_graph=visual_graph, labels_info=labels_info))
                     labels_info.children += (name_label,)
         else:
             labels_info.children = (graphics.get_some_other_label_that_i_dont_know_what_it_is(),)
