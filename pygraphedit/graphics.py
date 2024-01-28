@@ -48,7 +48,7 @@ class Menu(widgets.HBox):
         super().__init__()
         self.close_button = SmallButton(tooltip='Exit', icon='window-close')
         self.physics_button = widgets.ToggleButton(
-            value=False,
+            value=True,
             tooltip='Turn physics on/off',
             disabled=False,
             indent=False,
@@ -99,8 +99,8 @@ class LabelListBox(widgets.HBox):
                                    layout=widgets.Layout(width='215px', height='35px'),
                                    style=get_label_style())
         self.label.layout.border = '2px solid #000000'
-        self.button = widgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
-        self.children = (self.label, self.button)
+        self.delete_button = widgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
+        self.children = (self.label, self.delete_button)
 
 
 def get_head_label(text):
