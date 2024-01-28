@@ -96,13 +96,14 @@ def edit(graph: nx.Graph):
 
     def add_label(button_widget, labels_info: widgets.VBox, visual_graph: VisualGraph, label_name: widgets.Textarea):
         new_label_name = str(label_name.value)
+        label_name.value=''
         if visual_graph.selected_node is not None:
             if new_label_name in visual_graph.vertex_labels:
                 return
             else:
                 visual_graph.new_node_label(new_label_name)
 
-            new_label = graphics.LabelBox(str(label_name.value), "")
+            new_label = graphics.LabelBox(new_label_name, "")
 
             def modify_label(change, visual_graph: VisualGraph):
                 visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = change["new"]
@@ -117,7 +118,7 @@ def edit(graph: nx.Graph):
             else:
                 visual_graph.new_edge_label(new_label_name)
 
-            new_label = graphics.LabelBox(str(label_name.value), "")
+            new_label = graphics.LabelBox(new_label_name, "")
 
             def modify_label(change, visual_graph: VisualGraph):
                 visual_graph.graph.edges[visual_graph.selected_edge][new_label_name] = change["new"]
@@ -131,7 +132,8 @@ def edit(graph: nx.Graph):
     add_label_box.add_new_label_button.on_click(on_click)
 
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
-        nonlocal mode
+        nonlocal mode, add_label_box
+        add_label_box.label_name_text_box.value=''
         if mode is Mode.PROPERTIES:
             if visual_graph.selected_node is not None:
                 head_text = f"Node {repr(visual_graph.selected_node)}"
