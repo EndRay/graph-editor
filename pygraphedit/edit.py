@@ -213,6 +213,10 @@ def edit(graph: nx.Graph):
                     # we will select the edge also when dragging, this behaviour can be changed
                     edge_click(clicked_edge)
                     update_labels(labels_info, visual_graph)
+                else:
+                    visual_graph.selected_edge=None
+                    visual_graph.selected_node=None
+                    update_labels(labels_info, visual_graph)
 
         else:
             if mode_box.vert_button.active:
@@ -275,11 +279,12 @@ def edit(graph: nx.Graph):
                     return
 
             # if we didn't click vertex nor edge
-            if visual_graph.selected_node is None:
+            if visual_graph.selected_node is None and visual_graph.selected_edge is None:
                 new_node = mex(visual_graph.graph.nodes)
                 visual_graph.add_node(new_node, pos)
             else:
                 visual_graph.selected_node = None
+                visual_graph.selected_edge = None
                 update_labels(labels_info, visual_graph)
 
     def handle_doubleclick(event):
