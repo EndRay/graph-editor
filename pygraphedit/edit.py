@@ -33,8 +33,6 @@ def edit(graph: nx.Graph):
     visual_graph = VisualGraph(graph, (800, 500))
     CLOSE = False
     mode = Mode.STRUCTURE
-    edge_select = True
-    vertex_select = True
     is_drag = False
     start_mouse_position = (0, 0)
     actions_to_perform = []
@@ -56,47 +54,34 @@ def edit(graph: nx.Graph):
 
     mode_box.close_button.on_click(close)
 
-    def click_struct(button_widget):
+    def click_struct(new_mode, button_widget):
         nonlocal mode, mode_box
-        mode = Mode.STRUCTURE
-        button_widget.style.button_color = 'LightBlue'
-        mode_box.prop_button.style.button_color = None
+        if not button_widget.active:
+            mode = new_mode
+            mode_box.struct_button.toggle()
+            mode_box.prop_button.toggle()
         update_labels(labels_info, visual_graph)
 
-    mode_box.struct_button.on_click(partial(click_struct))
-
-    def click_prop(button_widget):
-        nonlocal mode, mode_box
-        mode = Mode.PROPERTIES
-        button_widget.style.button_color = 'LightBlue'
-        mode_box.struct_button.style.button_color = None
-        update_labels(labels_info, visual_graph)
-
-    mode_box.prop_button.on_click(partial(click_prop))
+    mode_box.struct_button.on_click(partial(click_struct, Mode.STRUCTURE))
+    mode_box.prop_button.on_click(partial(click_struct, Mode.PROPERTIES))
 
     def click_verts_select(button_widget):
-        nonlocal vertex_select, visual_graph
-        vertex_select = not vertex_select
-        if vertex_select:
-            button_widget.style.button_color = "LightGreen"
-        else:
+        nonlocal visual_graph
+        button_widget.toggle()
+        if not button_widget.active:
             visual_graph.selected_node = None
             update_labels(labels_info, visual_graph)
-            button_widget.style.button_color = "lightcoral"
 
-    mode_box.vert_button.on_click(partial(click_verts_select))
+    mode_box.vert_button.on_click(click_verts_select)
 
     def click_edge_select(button_widget):
-        nonlocal edge_select, visual_graph
-        edge_select = not edge_select
-        if edge_select:
-            button_widget.style.button_color = "LightGreen"
-        else:
+        nonlocal visual_graph
+        button_widget.toggle()
+        if not button_widget.active:
             visual_graph.selected_edge = None
             update_labels(labels_info, visual_graph)
-            button_widget.style.button_color = "lightcoral"
 
-    mode_box.edge_button.on_click(partial(click_edge_select))
+    mode_box.edge_button.on_click(click_edge_select)
     #######################
 
     # labels
@@ -216,14 +201,14 @@ def edit(graph: nx.Graph):
         nonlocal start_mouse_position
         start_mouse_position = (event['relativeX'], event['relativeY'])
         if mode is Mode.PROPERTIES:
-            if vertex_select:
+            if mode_box.vert_button.active:
                 clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
                 if dist < NODE_CLICK_RADIUS:
                     node_click(clicked_node)
                     update_labels(labels_info, visual_graph)
                     return
 
-            if edge_select:
+            if mode_box.edge_button.active:
                 clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
                 if dist < EDGE_CLICK_RADIUS:
                     visual_graph.selected_node = None
@@ -232,7 +217,7 @@ def edit(graph: nx.Graph):
                     update_labels(labels_info, visual_graph)
 
         else:
-            if vertex_select:
+            if mode_box.vert_button.active:
                 clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
                 if dist < NODE_CLICK_RADIUS:
                     visual_graph.drag_start(clicked_node)
@@ -262,7 +247,7 @@ def edit(graph: nx.Graph):
             pos = (event['relativeX'], event['relativeY'])
             # selecting edges is handled with clicking, as we canot drag them
             # perhaps we should add the functionality of dragging edges as well and change that
-            if vertex_select:
+            if mode_box.vert_button.active:
                 node, dist = visual_graph.get_closest_node(pos)
                 if dist < NODE_CLICK_RADIUS:
                     node = visual_graph.get_closest_node(pos)[0]
@@ -282,7 +267,7 @@ def edit(graph: nx.Graph):
                         update_labels(labels_info, visual_graph)
                     return
 
-            if edge_select:
+            if mode_box.edge_button.active:
                 clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
                 if dist < EDGE_CLICK_RADIUS:
                     # we will select the edge also when dragging, this behaviour can be changed
@@ -303,14 +288,14 @@ def edit(graph: nx.Graph):
         nonlocal mode
         if mode is Mode.STRUCTURE:
             pos = (event['relativeX'], event['relativeY'])
-            if vertex_select:
+            if mode_box.vert_button.active:
                 clicked_node, dist = visual_graph.get_closest_node(pos)
                 if dist < NODE_CLICK_RADIUS:
                     visual_graph.remove_node(clicked_node)
                     visual_graph.selected_node = None
                     return
 
-            if edge_select:
+            if mode_box.edge_button.active:
                 clicked_edge, dist = visual_graph.get_closest_edge(pos)
                 if dist < EDGE_CLICK_RADIUS:
                     visual_graph.selected_edge = None

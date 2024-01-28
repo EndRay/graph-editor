@@ -31,17 +31,22 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
 
 
 class SmallButton(widgets.Button):
-    def __init__(self, tooltip=None, icon=None, active_color=None, inactive_color=None):
-        pass
+    def __init__(self, active=False, active_color=None, inactive_color=None, description='',**kwargs):
+        super().__init__(layout=widgets.Layout(width='39px', height='39px'), description=description, **kwargs)
+        self.active=active
+        self.active_color=active_color
+        self.inactive_color=inactive_color
+        self.style.button_color = active_color if active else inactive_color
+
+    def toggle(self):
+        self.active=not self.active
+        self.style.button_color = self.active_color if self.active else self.inactive_color
 
 
 class Menu(widgets.HBox):
     def __init__(self):
         super().__init__()
-        self.close_button = widgets.Button(description="",
-                                           tooltip='Exit',
-                                           layout=widgets.Layout(width='39px', height='39px'),
-                                           icon='window-close')
+        self.close_button = SmallButton(tooltip='Exit', icon='window-close')
         self.physics_button = widgets.ToggleButton(
             value=False,
             tooltip='Turn physics on/off',
@@ -49,23 +54,18 @@ class Menu(widgets.HBox):
             indent=False,
             layout=widgets.Layout(width='39px', height='39px'), icon="wrench")
 
-        self.struct_button = widgets.Button(tooltip='Click to activate edges and vertices creation/deletion',
-                                            description="",
-                                            layout=widgets.Layout(width='39px', height='39px'),
-                                            icon="plus-circle")
+        self.struct_button = SmallButton(tooltip='Click to activate edges and vertices creation/deletion',
+                                            icon='plus-circle', active_color='LightBlue', active=True)
 
-        self.struct_button.style.button_color = "LightBlue"
 
-        self.prop_button = widgets.Button(tooltip='Click to modify properties of edges and vertices', description="",
-                                          layout=widgets.Layout(width='39px', height='39px'), icon="pencil")
-        self.prop_button.style.button_color = None
+        self.prop_button = SmallButton(tooltip='Click to modify properties of edges and vertices',
+                                       active_color='LightBlue', icon="pencil")
 
-        self.edge_button = widgets.Button(tooltip='Edges selection enabled/disabled', description="",
-                                          layout=widgets.Layout(width='39px', height='39px'), icon="arrows-v")
-        self.edge_button.style.button_color = "LightGreen"
-        self.vert_button = widgets.Button(tooltip='Vertices selection enabled/disabled', description="",
-                                          layout=widgets.Layout(width='39px', height='39px'), icon="circle")
-        self.vert_button.style.button_color = "LightGreen"
+        self.edge_button = SmallButton(tooltip='Edges selection enabled/disabled', 
+                                          icon='arrows-v', active_color='LightGreen', inactive_color='lightcoral', active=True)
+
+        self.vert_button = SmallButton(tooltip='Vertices selection enabled/disabled',
+                                        icon='circle', active_color='LightGreen', inactive_color='lightcoral', active=True)
 
         self.children = ([widgets.HBox((self.struct_button, self.prop_button),
                                        layout=widgets.Layout(border='0.5px solid #000000')),
