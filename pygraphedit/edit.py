@@ -95,36 +95,23 @@ def edit(graph: nx.Graph):
 
     def add_label(button_widget, labels_info: widgets.VBox, visual_graph: VisualGraph, label_name: widgets.Textarea):
         new_label_name = str(label_name.value)
-        label_name.value=''
         if visual_graph.selected_node is not None:
             if new_label_name in visual_graph.vertex_labels:
                 return
             else:
                 visual_graph.new_node_label(new_label_name)
 
-            new_label = graphics.LabelBox(new_label_name, "")
-
-            def modify_label(change, visual_graph: VisualGraph):
-                visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = change["new"]
-
-            on_change = partial(modify_label, visual_graph=visual_graph)
-            new_label.label_value.observe(on_change, names="value")
-            labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
-
+            update_labels(labels_info=labels_info, visual_graph=visual_graph)
+        
         elif visual_graph.selected_edge is not None:
             if new_label_name in visual_graph.edge_labels:
                 return
             else:
                 visual_graph.new_edge_label(new_label_name)
+            
+            update_labels(labels_info=labels_info, visual_graph=visual_graph)
 
-            new_label = graphics.LabelBox(new_label_name, "")
 
-            def modify_label(change, visual_graph: VisualGraph):
-                visual_graph.graph.edges[visual_graph.selected_edge][new_label_name] = change["new"]
-
-            on_change = partial(modify_label, visual_graph=visual_graph)
-            new_label.label_value.observe(on_change, names="value")
-            labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
 
     on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph,
                        label_name=add_label_box.label_name_text_box)
