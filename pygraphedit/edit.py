@@ -40,7 +40,6 @@ def edit(graph: nx.Graph):
     #################################
     #################################
 
-    style_label = graphics.get_style_label()
     canvas = Canvas(width=800, height=500)
 
     # main menu

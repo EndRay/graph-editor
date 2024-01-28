@@ -103,15 +103,6 @@ class LabelListBox(widgets.HBox):
         self.children = (self.label, self.button)
 
 
-def get_style_label():
-    style_label = widgets.Label()
-    style_label.layout.border = '2px solid #000000'
-    style_label.style.font_weight = 'bold'
-    style_label.style.background = '#d3d3d3'
-    style_label.style.font_variant = 'small-caps'
-    return style_label
-
-
 def get_head_label(text):
     return widgets.Label(value=text, layout=widgets.Layout(width='250px', height='30px', justify_content='center'))
 
