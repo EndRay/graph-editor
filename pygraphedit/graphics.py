@@ -76,7 +76,7 @@ def get_label_style():
     return dict(
         font_weight='bold',
         background='#d3d3d3',
-        font_variant="small-caps")
+        font_variant="small")
 
 
 class LabelBox(widgets.HBox):
