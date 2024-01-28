@@ -43,7 +43,7 @@ class Menu(widgets.HBox):
                                            layout=widgets.Layout(width='39px', height='39px'),
                                            icon='window-close')
         self.physics_button = widgets.ToggleButton(
-            value=True,
+            value=False,
             tooltip='Turn physics on/off',
             disabled=False,
             indent=False,
