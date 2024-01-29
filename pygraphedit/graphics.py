@@ -92,15 +92,30 @@ class LabelBox(widgets.HBox):
         self.children = (label_label, self.label_value)
 
 
-class LabelListBox(widgets.HBox):
+
+class LabelListBox(widgets.VBox):
+    text_layout = widgets.Layout(width='180px', height='35px')
+    button_layout = widgets.Layout(width='35px', height='35px')
     def __init__(self, str_value):
         super().__init__()
         self.label = widgets.Label(value=str_value,
-                                   layout=widgets.Layout(width='215px', height='35px'),
+                                   layout=self.text_layout,
                                    style=get_label_style())
         self.label.layout.border = '2px solid #000000'
-        self.delete_button = widgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
-        self.children = (self.label, self.delete_button)
+        self.delete_button = widgets.Button(layout=self.button_layout, icon="trash-o")
+        self.edit_button = widgets.Button(layout=self.button_layout, icon="pencil")
+        
+        self.edit_label_value=widgets.Textarea(placeholder='New label name', layout=self.text_layout)
+        self.confirm_edit_button=widgets.Button(layout=self.button_layout, icon="check")
+        self.escape_edit_button=widgets.Button(layout=self.button_layout, icon='times')
+
+        self.children=(widgets.HBox((self.label, self.edit_button, self.delete_button)),)
+    
+    def show_edit(self):
+        self.children=(widgets.HBox((self.label, self.confirm_edit_button, self.escape_edit_button)),widgets.HBox((self.edit_label_value,)))
+
+    def hide_edit(self):
+        self.children=(widgets.HBox((self.label, self.edit_button, self.delete_button)),)
 
 
 def get_head_label(text):
@@ -120,6 +135,16 @@ class AddLabelBox(widgets.HBox):
         self.label_name_text_box = widgets.Textarea(placeholder='Label name',
                                                     layout=widgets.Layout(width='215px', height='35px'))
         self.children = (self.label_name_text_box, self.add_new_label_button)
+
+class EditLabelBox(widgets.HBox):
+    def __init__(self):
+        super().__init__()
+        self.add_new_label_button = widgets.Button(description="",
+                                                   layout=widgets.Layout(width='35px', height='35px'), icon="plus")
+        self.label_name_text_box = widgets.Textarea(placeholder='New label name',
+                                                    layout=widgets.Layout(width='215px', height='35px'))
+        self.children = (self.label_name_text_box, self.add_new_label_button)
+
 
 
 def get_labels_info_scrollable():

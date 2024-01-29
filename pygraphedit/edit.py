@@ -86,7 +86,6 @@ def edit(graph: nx.Graph):
     # labels
     #######################
 
-    #output = widgets.Output() #for debugging
     labels_info = widgets.VBox()
     add_label_box = graphics.AddLabelBox()
 
@@ -154,24 +153,43 @@ def edit(graph: nx.Graph):
 
             else:
                 labels_info.children = (graphics.get_head_label(f"Node labels: "),)
-                
+                def edit(button, name_label):
+                    name_label.show_edit()
+
+                def escape_edit(button, name_label):
+                    name_label.hide_edit()
+
                 def remove_vertex_label(button, visual_graph, label, labels_info):
                     visual_graph.remove_vertex_label(label)
+                    update_labels(labels_info=labels_info, visual_graph=visual_graph)
+                
+                def edit_vertex_label(button, visual_graph, name_label, old_name, labels_info):
+                    visual_graph.edit_node_label(old_label=old_name, new_label=str(name_label.edit_label_value.value))
                     update_labels(labels_info=labels_info, visual_graph=visual_graph)
                 
                 for name in visual_graph.vertex_labels:
                     name_label=graphics.LabelListBox(name)
                     name_label.delete_button.on_click(partial(remove_vertex_label, label=name,visual_graph=visual_graph, labels_info=labels_info))
+                    name_label.edit_button.on_click(partial(edit, name_label=name_label))
+                    name_label.escape_edit_button.on_click(partial(escape_edit,name_label=name_label))
+                    name_label.confirm_edit_button.on_click(partial(edit_vertex_label, visual_graph=visual_graph, name_label=name_label, old_name=name, labels_info=labels_info))
                     labels_info.children += (name_label,)
                 
                 def remove_edge_label(button,visual_graph, label, labels_info):
                     visual_graph.remove_edge_label(label)
                     update_labels(labels_info=labels_info, visual_graph=visual_graph)
 
+                def edit_edge_label(button, visual_graph, name_label, old_name, labels_info):
+                    visual_graph.edit_edge_label(old_label=old_name, new_label=str(name_label.edit_label_value.value))
+                    update_labels(labels_info=labels_info, visual_graph=visual_graph)
+
                 labels_info.children += (graphics.get_head_label(f"Edge labels: "),)
                 for name in visual_graph.edge_labels:
                     name_label=graphics.LabelListBox(name)
                     name_label.delete_button.on_click(partial(remove_edge_label, label=name, visual_graph=visual_graph, labels_info=labels_info))
+                    name_label.edit_button.on_click(partial(edit, name_label=name_label))
+                    name_label.escape_edit_button.on_click(partial(escape_edit, name_label=name_label))
+                    name_label.confirm_edit_button.on_click(partial(edit_edge_label, visual_graph=visual_graph, name_label=name_label, old_name=name, labels_info=labels_info))
                     labels_info.children += (name_label,)
         else:
             labels_info.children = (graphics.get_some_other_label_that_i_dont_know_what_it_is(),)
