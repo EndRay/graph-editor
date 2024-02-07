@@ -1,18 +1,16 @@
 import threading
 import time
-import pygraphedit.graphics as graphics
+from src import pygraphedit as graphics
 import ipywidgets as widgets
 import networkx as nx
 from IPython.display import display
 from ipycanvas import Canvas
 from ipyevents import Event
-from pygraphedit.graph_physics import GraphPhysics
-from pygraphedit.settings import NODE_CLICK_RADIUS, EDGE_CLICK_RADIUS
-from pygraphedit.visual_graph import VisualGraph
+from src.pygraphedit.graph_physics import GraphPhysics
+from src.pygraphedit.settings import NODE_CLICK_RADIUS, EDGE_CLICK_RADIUS
+from src.pygraphedit.visual_graph import VisualGraph
 from functools import partial
 from enum import Enum
-from pygraphedit.debug import debug_text
-import traceback  # for debugging, can be removed
 
 
 class Mode(Enum):
@@ -25,7 +23,6 @@ def mex(arr):
     while result in arr:
         result += 1
     return result
-
 
 def edit(graph: nx.Graph):
     """
@@ -219,7 +216,7 @@ def edit(graph: nx.Graph):
                     update_labels(labels_info=labels_info, visual_graph=visual_graph)
 
                 for name in visual_graph.vertex_labels:
-                    name_label=graphics.LabelListBox(name)
+                    name_label= graphics.LabelListBox(name)
                     name_label.delete_button.on_click(partial(remove_vertex_label, label=name,visual_graph=visual_graph, labels_info=labels_info))
                     name_label.edit_button.on_click(partial(edit, name_label=name_label))
                     name_label.escape_edit_button.on_click(partial(escape_edit,name_label=name_label))
@@ -236,7 +233,7 @@ def edit(graph: nx.Graph):
 
                 labels_info.children += (graphics.get_head_label(f"Edge labels: "),)
                 for name in visual_graph.edge_labels:
-                    name_label=graphics.LabelListBox(name)
+                    name_label= graphics.LabelListBox(name)
                     name_label.delete_button.on_click(partial(remove_edge_label, label=name, visual_graph=visual_graph, labels_info=labels_info))
                     name_label.edit_button.on_click(partial(edit, name_label=name_label))
                     name_label.escape_edit_button.on_click(partial(escape_edit, name_label=name_label))

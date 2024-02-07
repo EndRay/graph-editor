@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "graph_editor"
+version = "0.0.2"
+authors = [
+  { name="Andrii Kovryhin"},
+  { name="Maksym Tur"},
+  { name="Denis Logunov"},
+  { name="Izabella Tylek"},
+]
+description = "Graph editor for Jupyter"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies=[
+    "asttokens==2.4.1",
+    "colorama==0.4.6",
+    "comm==0.2.0",
+    "decorator==5.1.1",
+    "executing==2.0.1",
+    "ipycanvas==0.13.1",
+    "ipyevents==2.0.2",
+    "ipython==8.18.1",
+    "ipywidgets==8.1.1",
+    "jedi==0.19.1",
+    "jupyterlab-widgets==3.0.9",
+    "matplotlib-inline==0.1.6",
+    "networkx==3.2.1",
+    "numpy==1.26.2",
+    "parso==0.8.3",
+    "Pillow==10.1.0",
+    "prompt-toolkit==3.0.41",
+    "pure-eval==0.2.2",
+    "Pygments==2.17.2",
+    "scipy==1.11.4",
+    "six==1.16.0",
+    "stack-data==0.6.3",
+    "traitlets==5.14.0",
+    "wcwidth==0.2.12",
+    "widgetsnbextension==4.0.9",
+    "pymunk==6.6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/EndRay/graph-editor"
+Issues = "https://github.com/EndRay/graph-editor/issues"

@@ -1,7 +1,7 @@
 import pymunk
 
-from pygraphedit.settings import NODE_RADIUS
-from pygraphedit.visual_graph import VisualGraph
+from src.pygraphedit.settings import NODE_RADIUS
+from src.pygraphedit.visual_graph import VisualGraph
 
 VERTEX_BODY_MASS = 1
 VERTEX_BODY_MOMENT = 1
