@@ -31,17 +31,22 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
 
 
 class SmallButton(widgets.Button):
-    def __init__(self, tooltip=None, icon=None, active_color=None, inactive_color=None):
-        pass
+    def __init__(self, active=False, active_color=None, inactive_color=None, description='',**kwargs):
+        super().__init__(layout=widgets.Layout(width='39px', height='39px'), description=description, **kwargs)
+        self.active=active
+        self.active_color=active_color
+        self.inactive_color=inactive_color
+        self.style.button_color = active_color if active else inactive_color
+
+    def toggle(self):
+        self.active=not self.active
+        self.style.button_color = self.active_color if self.active else self.inactive_color
 
 
 class Menu(widgets.HBox):
     def __init__(self):
         super().__init__()
-        self.close_button = widgets.Button(description="",
-                                           tooltip='Exit',
-                                           layout=widgets.Layout(width='39px', height='39px'),
-                                           icon='window-close')
+        self.close_button = SmallButton(tooltip='Exit', icon='window-close')
         self.physics_button = widgets.ToggleButton(
             value=True,
             tooltip='Turn physics on/off',
@@ -49,23 +54,18 @@ class Menu(widgets.HBox):
             indent=False,
             layout=widgets.Layout(width='39px', height='39px'), icon="wrench")
 
-        self.struct_button = widgets.Button(tooltip='Click to activate edges and vertices creation/deletion',
-                                            description="",
-                                            layout=widgets.Layout(width='39px', height='39px'),
-                                            icon="plus-circle")
+        self.struct_button = SmallButton(tooltip='Click to activate edges and vertices creation/deletion',
+                                            icon='plus-circle', active_color='LightBlue', active=True)
 
-        self.struct_button.style.button_color = "LightBlue"
 
-        self.prop_button = widgets.Button(tooltip='Click to modify properties of edges and vertices', description="",
-                                          layout=widgets.Layout(width='39px', height='39px'), icon="pencil")
-        self.prop_button.style.button_color = None
+        self.prop_button = SmallButton(tooltip='Click to modify properties of edges and vertices',
+                                       active_color='LightBlue', icon="pencil")
 
-        self.edge_button = widgets.Button(tooltip='Edges selection enabled/disabled', description="",
-                                          layout=widgets.Layout(width='39px', height='39px'), icon="arrows-v")
-        self.edge_button.style.button_color = "LightGreen"
-        self.vert_button = widgets.Button(tooltip='Vertices selection enabled/disabled', description="",
-                                          layout=widgets.Layout(width='39px', height='39px'), icon="circle")
-        self.vert_button.style.button_color = "LightGreen"
+        self.edge_button = SmallButton(tooltip='Edges selection enabled/disabled', 
+                                          icon='arrows-v', active_color='LightGreen', inactive_color='lightcoral', active=True)
+
+        self.vert_button = SmallButton(tooltip='Vertices selection enabled/disabled',
+                                        icon='circle', active_color='LightGreen', inactive_color='lightcoral', active=True)
 
         self.children = ([widgets.HBox((self.struct_button, self.prop_button),
                                        layout=widgets.Layout(border='0.5px solid #000000')),
@@ -76,7 +76,7 @@ def get_label_style():
     return dict(
         font_weight='bold',
         background='#d3d3d3',
-        font_variant="small-caps")
+        font_variant="small")
 
 
 class LabelBox(widgets.HBox):
@@ -92,24 +92,30 @@ class LabelBox(widgets.HBox):
         self.children = (label_label, self.label_value)
 
 
-class LabelListBox(widgets.HBox):
+
+class LabelListBox(widgets.VBox):
+    text_layout = widgets.Layout(width='180px', height='35px')
+    button_layout = widgets.Layout(width='35px', height='35px')
     def __init__(self, str_value):
         super().__init__()
         self.label = widgets.Label(value=str_value,
-                                   layout=widgets.Layout(width='215px', height='35px'),
+                                   layout=self.text_layout,
                                    style=get_label_style())
         self.label.layout.border = '2px solid #000000'
-        self.button = widgets.Button(layout=widgets.Layout(width='35px', height='35px'), icon="trash-o")
-        self.children = (self.label, self.button)
+        self.delete_button = widgets.Button(layout=self.button_layout, icon="trash-o")
+        self.edit_button = widgets.Button(layout=self.button_layout, icon="pencil")
+        
+        self.edit_label_value=widgets.Textarea(placeholder='New label name', layout=self.text_layout)
+        self.confirm_edit_button=widgets.Button(layout=self.button_layout, icon="check")
+        self.escape_edit_button=widgets.Button(layout=self.button_layout, icon='times')
 
+        self.children=(widgets.HBox((self.label, self.edit_button, self.delete_button)),)
+    
+    def show_edit(self):
+        self.children=(widgets.HBox((self.label, self.confirm_edit_button, self.escape_edit_button)),widgets.HBox((self.edit_label_value,)))
 
-def get_style_label():
-    style_label = widgets.Label()
-    style_label.layout.border = '2px solid #000000'
-    style_label.style.font_weight = 'bold'
-    style_label.style.background = '#d3d3d3'
-    style_label.style.font_variant = 'small-caps'
-    return style_label
+    def hide_edit(self):
+        self.children=(widgets.HBox((self.label, self.edit_button, self.delete_button)),)
 
 
 def get_head_label(text):
@@ -129,6 +135,16 @@ class AddLabelBox(widgets.HBox):
         self.label_name_text_box = widgets.Textarea(placeholder='Label name',
                                                     layout=widgets.Layout(width='215px', height='35px'))
         self.children = (self.label_name_text_box, self.add_new_label_button)
+
+class EditLabelBox(widgets.HBox):
+    def __init__(self):
+        super().__init__()
+        self.add_new_label_button = widgets.Button(description="",
+                                                   layout=widgets.Layout(width='35px', height='35px'), icon="plus")
+        self.label_name_text_box = widgets.Textarea(placeholder='New label name',
+                                                    layout=widgets.Layout(width='215px', height='35px'))
+        self.children = (self.label_name_text_box, self.add_new_label_button)
+
 
 
 def get_labels_info_scrollable():

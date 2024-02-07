@@ -33,8 +33,6 @@ def edit(graph: nx.Graph):
     visual_graph = VisualGraph(graph, (800, 500))
     CLOSE = False
     mode = Mode.STRUCTURE
-    edge_select = True
-    vertex_select = True
     is_drag = False
     start_mouse_position = (0, 0)
     actions_to_perform = []
@@ -42,7 +40,6 @@ def edit(graph: nx.Graph):
     #################################
     #################################
 
-    style_label = graphics.get_style_label()
     canvas = Canvas(width=800, height=500)
 
     # main menu
@@ -56,47 +53,34 @@ def edit(graph: nx.Graph):
 
     mode_box.close_button.on_click(close)
 
-    def click_struct(button_widget):
+    def click_struct(new_mode, button_widget):
         nonlocal mode, mode_box
-        mode = Mode.STRUCTURE
-        button_widget.style.button_color = 'LightBlue'
-        mode_box.prop_button.style.button_color = None
+        if not button_widget.active:
+            mode = new_mode
+            mode_box.struct_button.toggle()
+            mode_box.prop_button.toggle()
         update_labels(labels_info, visual_graph)
 
-    mode_box.struct_button.on_click(partial(click_struct))
-
-    def click_prop(button_widget):
-        nonlocal mode, mode_box
-        mode = Mode.PROPERTIES
-        button_widget.style.button_color = 'LightBlue'
-        mode_box.struct_button.style.button_color = None
-        update_labels(labels_info, visual_graph)
-
-    mode_box.prop_button.on_click(partial(click_prop))
+    mode_box.struct_button.on_click(partial(click_struct, Mode.STRUCTURE))
+    mode_box.prop_button.on_click(partial(click_struct, Mode.PROPERTIES))
 
     def click_verts_select(button_widget):
-        nonlocal vertex_select, visual_graph
-        vertex_select = not vertex_select
-        if vertex_select:
-            button_widget.style.button_color = "LightGreen"
-        else:
+        nonlocal visual_graph
+        button_widget.toggle()
+        if not button_widget.active:
             visual_graph.selected_node = None
             update_labels(labels_info, visual_graph)
-            button_widget.style.button_color = "lightcoral"
 
-    mode_box.vert_button.on_click(partial(click_verts_select))
+    mode_box.vert_button.on_click(click_verts_select)
 
     def click_edge_select(button_widget):
-        nonlocal edge_select, visual_graph
-        edge_select = not edge_select
-        if edge_select:
-            button_widget.style.button_color = "LightGreen"
-        else:
+        nonlocal visual_graph
+        button_widget.toggle()
+        if not button_widget.active:
             visual_graph.selected_edge = None
             update_labels(labels_info, visual_graph)
-            button_widget.style.button_color = "lightcoral"
 
-    mode_box.edge_button.on_click(partial(click_edge_select))
+    mode_box.edge_button.on_click(click_edge_select)
     #######################
 
     # labels
@@ -117,36 +101,23 @@ def edit(graph: nx.Graph):
             else:
                 visual_graph.new_node_label(new_label_name)
 
-            new_label = graphics.LabelBox(str(label_name.value), "")
-
-            def modify_label(change, visual_graph: VisualGraph):
-                visual_graph.graph.nodes[visual_graph.selected_node][new_label_name] = change["new"]
-
-            on_change = partial(modify_label, visual_graph=visual_graph)
-            new_label.label_value.observe(on_change, names="value")
-            labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
-
+            update_labels(labels_info=labels_info, visual_graph=visual_graph)
+        
         elif visual_graph.selected_edge is not None:
             if new_label_name in visual_graph.edge_labels:
                 return
             else:
                 visual_graph.new_edge_label(new_label_name)
-
-            new_label = graphics.LabelBox(str(label_name.value), "")
-
-            def modify_label(change, visual_graph: VisualGraph):
-                visual_graph.graph.edges[visual_graph.selected_edge][new_label_name] = change["new"]
-
-            on_change = partial(modify_label, visual_graph=visual_graph)
-            new_label.label_value.observe(on_change, names="value")
-            labels_info.children = labels_info.children[:-1] + (new_label,) + labels_info.children[-1:]
+            
+            update_labels(labels_info=labels_info, visual_graph=visual_graph)
 
     on_click = partial(add_label, labels_info=labels_info, visual_graph=visual_graph,
                        label_name=add_label_box.label_name_text_box)
     add_label_box.add_new_label_button.on_click(on_click)
 
     def update_labels(labels_info: widgets.VBox, visual_graph: VisualGraph):
-        nonlocal mode
+        nonlocal mode, add_label_box
+        add_label_box.label_name_text_box.value=''
         if mode is Mode.PROPERTIES:
             if visual_graph.selected_node is not None:
                 head_text = f"Node {repr(visual_graph.selected_node)}"
@@ -172,7 +143,6 @@ def edit(graph: nx.Graph):
                 for i in visual_graph.graph.edges[visual_graph.selected_edge].keys():
                     value = str(visual_graph.graph.edges[visual_graph.selected_edge][i])
                     new_label = graphics.LabelBox(str(i), value)
-
                     def modify_label(change, visual_graph: VisualGraph):
                         visual_graph.graph.edges[visual_graph.selected_edge][i] = change["new"]
 
@@ -183,12 +153,44 @@ def edit(graph: nx.Graph):
 
             else:
                 labels_info.children = (graphics.get_head_label(f"Node labels: "),)
+                def edit(button, name_label):
+                    name_label.show_edit()
+
+                def escape_edit(button, name_label):
+                    name_label.hide_edit()
+
+                def remove_vertex_label(button, visual_graph, label, labels_info):
+                    visual_graph.remove_vertex_label(label)
+                    update_labels(labels_info=labels_info, visual_graph=visual_graph)
+                
+                def edit_vertex_label(button, visual_graph, name_label, old_name, labels_info):
+                    visual_graph.edit_node_label(old_label=old_name, new_label=str(name_label.edit_label_value.value))
+                    update_labels(labels_info=labels_info, visual_graph=visual_graph)
+                
                 for name in visual_graph.vertex_labels:
-                    labels_info.children += (graphics.LabelListBox(name),)
+                    name_label=graphics.LabelListBox(name)
+                    name_label.delete_button.on_click(partial(remove_vertex_label, label=name,visual_graph=visual_graph, labels_info=labels_info))
+                    name_label.edit_button.on_click(partial(edit, name_label=name_label))
+                    name_label.escape_edit_button.on_click(partial(escape_edit,name_label=name_label))
+                    name_label.confirm_edit_button.on_click(partial(edit_vertex_label, visual_graph=visual_graph, name_label=name_label, old_name=name, labels_info=labels_info))
+                    labels_info.children += (name_label,)
+                
+                def remove_edge_label(button,visual_graph, label, labels_info):
+                    visual_graph.remove_edge_label(label)
+                    update_labels(labels_info=labels_info, visual_graph=visual_graph)
+
+                def edit_edge_label(button, visual_graph, name_label, old_name, labels_info):
+                    visual_graph.edit_edge_label(old_label=old_name, new_label=str(name_label.edit_label_value.value))
+                    update_labels(labels_info=labels_info, visual_graph=visual_graph)
 
                 labels_info.children += (graphics.get_head_label(f"Edge labels: "),)
                 for name in visual_graph.edge_labels:
-                    labels_info.children += (graphics.LabelListBox(name),)
+                    name_label=graphics.LabelListBox(name)
+                    name_label.delete_button.on_click(partial(remove_edge_label, label=name, visual_graph=visual_graph, labels_info=labels_info))
+                    name_label.edit_button.on_click(partial(edit, name_label=name_label))
+                    name_label.escape_edit_button.on_click(partial(escape_edit, name_label=name_label))
+                    name_label.confirm_edit_button.on_click(partial(edit_edge_label, visual_graph=visual_graph, name_label=name_label, old_name=name, labels_info=labels_info))
+                    labels_info.children += (name_label,)
         else:
             labels_info.children = (graphics.get_some_other_label_that_i_dont_know_what_it_is(),)
 
@@ -216,23 +218,27 @@ def edit(graph: nx.Graph):
         nonlocal start_mouse_position
         start_mouse_position = (event['relativeX'], event['relativeY'])
         if mode is Mode.PROPERTIES:
-            if vertex_select:
+            if mode_box.vert_button.active:
                 clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
                 if dist < NODE_CLICK_RADIUS:
                     node_click(clicked_node)
                     update_labels(labels_info, visual_graph)
                     return
 
-            if edge_select:
+            if mode_box.edge_button.active:
                 clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
                 if dist < EDGE_CLICK_RADIUS:
                     visual_graph.selected_node = None
                     # we will select the edge also when dragging, this behaviour can be changed
                     edge_click(clicked_edge)
                     update_labels(labels_info, visual_graph)
+                else:
+                    visual_graph.selected_edge=None
+                    visual_graph.selected_node=None
+                    update_labels(labels_info, visual_graph)
 
         else:
-            if vertex_select:
+            if mode_box.vert_button.active:
                 clicked_node, dist = visual_graph.get_closest_node((event['relativeX'], event['relativeY']))
                 if dist < NODE_CLICK_RADIUS:
                     visual_graph.drag_start(clicked_node)
@@ -262,7 +268,7 @@ def edit(graph: nx.Graph):
             pos = (event['relativeX'], event['relativeY'])
             # selecting edges is handled with clicking, as we canot drag them
             # perhaps we should add the functionality of dragging edges as well and change that
-            if vertex_select:
+            if mode_box.vert_button.active:
                 node, dist = visual_graph.get_closest_node(pos)
                 if dist < NODE_CLICK_RADIUS:
                     node = visual_graph.get_closest_node(pos)[0]
@@ -282,7 +288,7 @@ def edit(graph: nx.Graph):
                         update_labels(labels_info, visual_graph)
                     return
 
-            if edge_select:
+            if mode_box.edge_button.active:
                 clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
                 if dist < EDGE_CLICK_RADIUS:
                     # we will select the edge also when dragging, this behaviour can be changed
@@ -292,25 +298,26 @@ def edit(graph: nx.Graph):
                     return
 
             # if we didn't click vertex nor edge
-            if visual_graph.selected_node is None:
+            if visual_graph.selected_node is None and visual_graph.selected_edge is None:
                 new_node = mex(visual_graph.graph.nodes)
                 visual_graph.add_node(new_node, pos)
             else:
                 visual_graph.selected_node = None
+                visual_graph.selected_edge = None
                 update_labels(labels_info, visual_graph)
 
     def handle_doubleclick(event):
         nonlocal mode
         if mode is Mode.STRUCTURE:
             pos = (event['relativeX'], event['relativeY'])
-            if vertex_select:
+            if mode_box.vert_button.active:
                 clicked_node, dist = visual_graph.get_closest_node(pos)
                 if dist < NODE_CLICK_RADIUS:
                     visual_graph.remove_node(clicked_node)
                     visual_graph.selected_node = None
                     return
 
-            if edge_select:
+            if mode_box.edge_button.active:
                 clicked_edge, dist = visual_graph.get_closest_edge(pos)
                 if dist < EDGE_CLICK_RADIUS:
                     visual_graph.selected_edge = None
@@ -341,10 +348,8 @@ def edit(graph: nx.Graph):
     main_box.children = ([widgets.VBox((mode_box, labels_info_scrollable)), canvas])
     display(main_box)
 
-    output = widgets.Output()
-    display(output)
-
-    # display(debug_text)
+    #display(output)#for debugging
+    #display(debug_text)
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
 
@@ -360,8 +365,7 @@ def edit(graph: nx.Graph):
                     action(*args, **kwargs)
                 actions_to_perform.clear()
         except Exception as e:
-            pass
-            # debug_text.value = traceback.format_exc()
+            debug_text.value = repr(e)
 
     thread = threading.Thread(target=main_loop, args=(visual_graph, mode_box.physics_button))
     thread.start()

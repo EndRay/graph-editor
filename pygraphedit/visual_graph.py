@@ -42,7 +42,6 @@ class VisualGraph:
     def remove_edge(self, node1, node2):
         self.graph.remove_edge(node1, node2)
 
-    @subscribable
     def new_node_label(self, label):
         if label in self.vertex_labels:
             return
@@ -50,22 +49,56 @@ class VisualGraph:
             self.vertex_labels.add(label)
             nx.set_node_attributes(self.graph, "", label)
 
-    @subscribable
     def new_edge_label(self, label):
         if label in self.edge_labels:
             return
         else:
             self.edge_labels.add(label)
             nx.set_edge_attributes(self.graph, "", label)
+    
+    def remove_edge_label(self, label):
+        if not label in self.edge_labels:
+            return
+        else:
+            self.edge_labels.remove(label)
+            for v1, v2, d in self.graph.edges(data=True):
+                del d[label]
+            
+    def remove_vertex_label(self, label):
+        if not label in self.vertex_labels:
+            return
+        else:
+            self.vertex_labels.remove(label)
+            for v, d in self.graph.nodes(data=True):
+                del d[label]
+    
+    def edit_edge_label(self, old_label, new_label):
+        if (not old_label in self.edge_labels) or new_label in self.edge_labels:
+            return
+        else:
+            self.edge_labels.remove(old_label)
+            self.edge_labels.add(new_label)
+            for v1,v2,d in self.graph.edges(data=True):
+                d[new_label]=d[old_label]
+                del d[old_label]
 
-    @subscribable
+    def edit_node_label(self, old_label, new_label):
+        if (not old_label in self.vertex_labels) or new_label in self.vertex_labels:
+            return
+        else:
+            self.vertex_labels.remove(old_label)
+            self.vertex_labels.add(new_label)
+            for v, d in self.graph.nodes(data=True):
+                d[new_label]=d[old_label]
+                del d[old_label]
+
+    
     def label_edge(self, edge, label, value):
         if label not in self.edge_labels:
             raise ValueError("Attribute for the label was not set")
         else:
             self.graph.edges[edge][label] = value
 
-    @subscribable
     def label_node(self, node, label, value):
         if label not in self.node_labels:
             raise ValueError("Attribute for the label was not set")
