@@ -47,6 +47,57 @@ def draw_graph(canvas: Canvas, visual_graph: VisualGraph):
 
 
 def edit(graph: nx.Graph):
+    """
+    An interactive graph editor function designed for Jupyter.
+
+    This function enables users to manipulate a graph by creating vertices, edges and adding labels.
+
+
+    Parameters
+    ----------
+    - graph (networkx.Graph): The graph object to be edited. It should be an instance of the
+      NetworkX Graph class or a subclass.
+
+    Functions of buttons in order from left to right
+    ------------------------------------------------
+    1-2: Select whether you want to edit graph structure (1) or labels (2).
+    3. Select if you want for nodes to be clickable.
+       Deselecting this should make easier to operate on edges in a large graph.
+    4. Select if you want for edges to be clickable.
+       Deselecting this should make easier to operate on nodes in a large graph.
+    5. Close editing window.
+
+    Mouse functions
+    ---------------
+    1. Click and drag vertices to move them around the canvas.
+    2. To create an edge, click on one vertex and then click on another vertex.
+       An edge will be created between the two selected vertices.
+    3. To create a vertex, click on empty space of a canvas.
+    3. To delete an object, double-click on it.
+
+    Dependencies
+    ------------
+    - Jupyter notebook web environment.
+    - NetworkX library for graph manipulation.
+
+    Notes
+    -----
+    This function relies on Jupyter ipywidgets, so it should work only in web versions of Jupyter.
+
+    Examples
+    --------
+    >>> import networkx as nx
+
+    Create a sample graph
+
+    >>> G = nx.Graph()
+    >>> G.add_nodes_from([1, 2, 3])
+    >>> G.add_edges_from([(1, 2), (2, 3)])
+
+    Call the interactive graph editor
+
+    >>> edit(G)
+    """
     visual_graph = VisualGraph(graph, (800, 500))
 
     # creating canvas
