@@ -1,6 +1,6 @@
 from ipycanvas import Canvas, hold_canvas
-from src.pygraphedit.settings import DRAGGED_NODE_RADIUS, NODE_RADIUS
-from src.pygraphedit.visual_graph import VisualGraph
+from .settings import DRAGGED_NODE_RADIUS, NODE_RADIUS
+from .visual_graph import VisualGraph
 import ipywidgets as widgets
 
 

@@ -1,14 +1,15 @@
 import threading
 import time
-from src import pygraphedit as graphics
 import ipywidgets as widgets
 import networkx as nx
 from IPython.display import display
 from ipycanvas import Canvas
 from ipyevents import Event
-from src.pygraphedit.graph_physics import GraphPhysics
-from src.pygraphedit.settings import NODE_CLICK_RADIUS, EDGE_CLICK_RADIUS
-from src.pygraphedit.visual_graph import VisualGraph
+
+from . import graphics
+from .graph_physics import GraphPhysics
+from .settings import NODE_CLICK_RADIUS, EDGE_CLICK_RADIUS
+from .visual_graph import VisualGraph
 from functools import partial
 from enum import Enum
 

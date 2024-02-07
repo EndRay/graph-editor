@@ -3,7 +3,7 @@ import random
 import networkx as nx
 import numpy as np
 
-from src.pygraphedit.subscribe import subscribable
+from .subscribe import subscribable
 
 
 class VisualGraph:
