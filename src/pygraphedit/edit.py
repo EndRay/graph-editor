@@ -66,6 +66,7 @@ def edit(graph: nx.Graph):
     Examples
     --------
     >>> import networkx as nx
+    >>> from pygraphedit import edit
 
     Create a sample graph
 

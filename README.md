@@ -31,6 +31,7 @@ This function relies on Jupyter ipywidgets, so it should work only in web versio
 ### Examples
 ```python
 import networkx as nx
+from pygraphedit import edit
 
 # Create a sample graph
 G = nx.Graph()
