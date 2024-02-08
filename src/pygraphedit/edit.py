@@ -77,8 +77,6 @@ def edit(graph: nx.Graph):
 
     >>> edit(G)
     """
-    # logical properties of the graph
-    ################################
     visual_graph = VisualGraph(graph, (800, 500))
     CLOSE = False
     mode = Mode.STRUCTURE
@@ -86,13 +84,7 @@ def edit(graph: nx.Graph):
     start_mouse_position = (0, 0)
     actions_to_perform = []
     EPS = 10
-    #################################
-    #################################
-
     canvas = Canvas(width=800, height=500)
-
-    # main menu
-    #################################
     mode_box = graphics.Menu()
 
     def close(button):
@@ -130,11 +122,6 @@ def edit(graph: nx.Graph):
             update_labels(labels_info, visual_graph)
 
     mode_box.edge_button.on_click(click_edge_select)
-    #######################
-
-    # labels
-    #######################
-
     labels_info = widgets.VBox()
     add_label_box = graphics.AddLabelBox()
 
@@ -243,11 +230,6 @@ def edit(graph: nx.Graph):
         else:
             labels_info.children = (graphics.get_some_other_label_that_i_dont_know_what_it_is(),)
 
-    ##############################
-
-    # canvas actions
-    ##############################
-
     def node_click(node):
         visual_graph.selected_edge = None
         if visual_graph.selected_node is None or visual_graph.selected_node != node:
@@ -306,7 +288,6 @@ def edit(graph: nx.Graph):
 
     def handle_mouseup(event):
         nonlocal mode
-        # handling in PROPERTIES mode is handled with clicking, as we cannot drag in that mode
         if mode is Mode.STRUCTURE:
             nonlocal is_drag
             visual_graph.drag_end()
@@ -315,8 +296,6 @@ def edit(graph: nx.Graph):
                 return
 
             pos = (event['relativeX'], event['relativeY'])
-            # selecting edges is handled with clicking, as we canot drag them
-            # perhaps we should add the functionality of dragging edges as well and change that
             if mode_box.vert_button.active:
                 node, dist = visual_graph.get_closest_node(pos)
                 if dist < NODE_CLICK_RADIUS:
@@ -340,13 +319,10 @@ def edit(graph: nx.Graph):
             if mode_box.edge_button.active:
                 clicked_edge, dist = visual_graph.get_closest_edge((event['relativeX'], event['relativeY']))
                 if dist < EDGE_CLICK_RADIUS:
-                    # we will select the edge also when dragging, this behaviour can be changed
-                    # for now the only thing that selecting an edge will do will be showing its properties
                     edge_click(clicked_edge)
                     update_labels(labels_info, visual_graph)
                     return
 
-            # if we didn't click vertex nor edge
             if visual_graph.selected_node is None and visual_graph.selected_edge is None:
                 new_node = mex(visual_graph.graph.nodes)
                 visual_graph.add_node(new_node, pos)
@@ -385,20 +361,11 @@ def edit(graph: nx.Graph):
     Event(source=canvas, watched_events=['mouseup']).on_dom_event(perform_in_future(handle_mouseup))
     Event(source=canvas, watched_events=['dblclick']).on_dom_event(perform_in_future(handle_doubleclick))
 
-    ##################################
-    ##################################
-
-    # main structure and main loop
-    #############################
-
     main_box = widgets.HBox()
     debug_text = widgets.Textarea()
 
     main_box.children = ([widgets.VBox((mode_box, labels_info_scrollable)), canvas])
     display(main_box)
-
-    #display(output)#for debugging
-    #display(debug_text)
     update_labels(labels_info, visual_graph)
     graph_physics = GraphPhysics(visual_graph)
 
@@ -418,6 +385,3 @@ def edit(graph: nx.Graph):
 
     thread = threading.Thread(target=main_loop, args=(visual_graph, mode_box.physics_button))
     thread.start()
-
-    ################################
-    ################################

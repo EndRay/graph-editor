@@ -122,7 +122,6 @@ def get_head_label(text):
     return widgets.Label(value=text, layout=widgets.Layout(width='250px', height='30px', justify_content='center'))
 
 
-# this should of course be changed, but i will leave it for now
 def get_some_other_label_that_i_dont_know_what_it_is():
     return widgets.Label(value=f"", layout=widgets.Layout(width='250px', height='70px', align_items='stretch'))
 

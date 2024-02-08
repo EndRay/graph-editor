@@ -10,22 +10,15 @@ WALLS_WIDTH = 10
 
 def create_border(space, bounds: (int, int)):
     width, height = bounds
-    # Create the ground (static) segment
     ground = pymunk.Segment(space.static_body, (0, -WALLS_WIDTH), (width, -WALLS_WIDTH), WALLS_WIDTH)
     ground.friction = 1.0
     space.add(ground)
-
-    # Create the ceiling (static) segment
     ceiling = pymunk.Segment(space.static_body, (0, height + WALLS_WIDTH), (width, height + WALLS_WIDTH), WALLS_WIDTH)
     ceiling.friction = 1.0
     space.add(ceiling)
-
-    # Create the left (static) segment
     left_wall = pymunk.Segment(space.static_body, (-WALLS_WIDTH, 0), (-WALLS_WIDTH, height), WALLS_WIDTH)
     left_wall.friction = 1.0
     space.add(left_wall)
-
-    # Create the right (static) segment
     right_wall = pymunk.Segment(space.static_body, (width + WALLS_WIDTH, 0), (width + WALLS_WIDTH, height), WALLS_WIDTH)
     right_wall.friction = 1.0
     space.add(right_wall)
